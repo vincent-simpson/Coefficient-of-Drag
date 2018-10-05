@@ -19,18 +19,18 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity  {
 
     LocationService myService;
     boolean status;
     LocationManager locationManager;
-    static TextView time, speed;
-    Button start, pause, stop;
+    static TextView time, speed, notifyButtonPressed;
+    static Button start, pause, stop;
+    static Button startTimer;
     static long startTime, endTime;
     ImageView image;
     static ProgressDialog locate;
     static int p = 0;
-
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -94,6 +94,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        System.setProperty("org.apache.poi.javax.xml.stream.XMLInputFactory", "com.fasterxml.aalto.stax.InputFactoryImpl");
+        System.setProperty("org.apache.poi.javax.xml.stream.XMLOutputFactory", "com.fasterxml.aalto.stax.OutputFactoryImpl");
+        System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -105,6 +109,8 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
         }
 
+        notifyButtonPressed = findViewById(R.id.notifyButtonPressed);
+        notifyButtonPressed.setVisibility(View.GONE);
         time =  findViewById(R.id.timetext);
         speed =  findViewById(R.id.speedtext);
 
@@ -113,6 +119,8 @@ public class MainActivity extends AppCompatActivity {
         stop =  findViewById(R.id.stop);
 
         image = findViewById(R.id.image);
+        startTimer = findViewById(R.id.startTimerButton);
+        startTimer.setVisibility(View.GONE);
 
         start.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -181,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
                p =0;
             }
         });
+
     }
 
 
@@ -215,5 +224,6 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog alert = alertDialogBuilder.create();
         alert.show();
     }
+
 
 }

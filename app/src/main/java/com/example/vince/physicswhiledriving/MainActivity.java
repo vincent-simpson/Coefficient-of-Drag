@@ -146,6 +146,7 @@ public class MainActivity extends AppCompatActivity  {
                 locate.setCancelable(false);
                 locate.setMessage("Getting Location...");
                 locate.show();
+
                 start.setVisibility(View.GONE);
                 pause.setVisibility(View.VISIBLE);
                 pause.setText("Pause");
@@ -170,8 +171,7 @@ public class MainActivity extends AppCompatActivity  {
                         return;
                     }
                     pause.setText("Pause");
-                     p =0;
-
+                     p = 0;
                 }
             }
         });

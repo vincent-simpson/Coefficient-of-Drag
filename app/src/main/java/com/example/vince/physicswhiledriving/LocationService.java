@@ -47,11 +47,10 @@ public class LocationService extends Service implements
 
 {
     private FusedLocationProviderClient mFusedLocationClient;
-    private LocationCallback mLocationCallback;
-    private static final long INTERVAL = 0;
     public LocationRequest mLocationRequest;
     public GoogleApiClient mGoogleApiClient;
     public Location mCurrentLocation, lStart, lEnd;
+    private static final long INTERVAL = 0;
 
     public double speed;
     boolean wasSpeedAbove55 = false;
@@ -61,8 +60,16 @@ public class LocationService extends Service implements
     public Button startTimer;
     private static final int ONE_SECOND = 1000;
 
-
     private final IBinder mBinder = new LocalBinder();
+
+    private LocationCallback mLocationCallback = new LocationCallback()
+    {
+        @Override
+        public void onLocationResult(LocationResult locationResult)
+        {
+            onLocationChanged(locationResult.getLastLocation());
+        }
+    };
 
     @Nullable
     @Override
@@ -103,14 +110,7 @@ public class LocationService extends Service implements
     @SuppressLint("MissingPermission")
     private void requestLocationUpdates()
     {
-        LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult)
-            {
-
-                onLocationChanged(locationResult.getLastLocation());
-            }
-        }, Looper.myLooper());
+        LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
     }
 
 
@@ -120,14 +120,17 @@ public class LocationService extends Service implements
 //        LocationServices.FusedLocationApi.removeLocationUpdates(
 //                mGoogleApiClient, this);
 
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+        if(mFusedLocationClient != null) {
+            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+            mFusedLocationClient = null;
+            mLocationRequest = null;
+        }
     }
 
 
     @Override
     public void onConnectionSuspended(int i)
     {
-
     }
 
 
@@ -135,19 +138,23 @@ public class LocationService extends Service implements
     public void onLocationChanged(Location location)
     {
         MainActivity.locate.dismiss();
-        if(location == null) {
+        if(location == null)
+        {
             mCurrentLocation = location;
-        } else if(isBetterLocation(location, mCurrentLocation)) {
+        } else if(isBetterLocation(location, mCurrentLocation))
+        {
             mCurrentLocation = location;
             speed =  Math.rint(mCurrentLocation.getSpeed() * 2.2369);
             Log.i("Current speed", "Your current speed is " + speed);
-        } else {
+        }
+        else {
             speed = Math.rint(location.getSpeed() * 2.2369);
             Log.i("Current speed", "Your current speed is " + speed);
         }
 
         //Calling the method below updates the  live values of speed to the TextViews.
-        try{
+        try
+        {
             updateUI();
         }catch (Exception e)
         {
@@ -158,7 +165,6 @@ public class LocationService extends Service implements
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult)
     {
-
     }
 
     class LocalBinder extends Binder
@@ -169,20 +175,24 @@ public class LocationService extends Service implements
     }
 
     //The live feed of Speed is being set in the method below .
-    public void updateUI() throws IOException {
+    public void updateUI() throws IOException
+    {
 
-        if (MainActivity.p == 0) {
+        if (MainActivity.p == 0)
+        {
+
             MainActivity.endTime = System.currentTimeMillis();
-            long diff = MainActivity.endTime - MainActivity.startTime;
+            long diff = TimeUnit.MILLISECONDS.toMinutes(MainActivity.endTime - MainActivity.startTime);
+
             MainActivity.speed.setSingleLine(false);
             MainActivity.time.setSingleLine(false);
-            diff = TimeUnit.MILLISECONDS.toMinutes(diff);
 
            MainActivity.time.setText("Total Time: " + diff + " minutes");
-            if (speed >= 0.0 && speed < 40.0)
+            if (speed >= 0.0 && speed < 90.0)
             {
                 MainActivity.speed.setText(getString(R.string.accelerate_instruction) + new DecimalFormat("#.##").format(speed) + getString(R.string.default_mph));
-                if(speed == 0 && !hasClockStarted) {
+                if(speed > 50 && !hasClockStarted)
+                {
                     MainActivity.startTimer.setVisibility(View.VISIBLE);
                     Log.i("Start timer button", "Start timer button has been displayed");
                 } else{
@@ -208,17 +218,15 @@ public class LocationService extends Service implements
                     Log.i("Start time seconds: ", startTime + " start time seconds");
                 }
             });
-             /*
-                Issue: When the application is getting speed, sometimes it goes from 17 mph and jumps to 14 mph when decelerating, which
-                will not trigger this code because 15 is skipped. Need to find solution.
-                 */
 
             currentTime = System.currentTimeMillis() / 1000;
+            long timeElapsed = currentTime - startTime;
+
             Log.i("Current time seconds: ", currentTime + " current time seconds");
-            Log.i("Subtraction ", "Difference: " + (currentTime - startTime));
-            if((currentTime - startTime) % 10 == 0)
+            Log.i("Subtraction ", "Difference: " + timeElapsed);
+
+            if(timeElapsed % 10 == 0 && timeElapsed != 0)
             {
-                //Ten seconds have elapsed since we were at 50 mph
                 timeValues.add(speed);
                 Log.i("Adding speed to array", "Current speed of " + speed + " mph was added to the array");
             }
@@ -230,7 +238,8 @@ public class LocationService extends Service implements
             Sheet sheet = null;
             Workbook workbook = null;
 
-            try{
+            try
+            {
                 workbook = WorkbookFactory.create(file);
                 if(!workbook.getSheetName(1).equals("sheetone"))
                 {
@@ -238,38 +247,33 @@ public class LocationService extends Service implements
                 } else {
                     sheet = workbook.getSheetAt(1);
                 }
-
-
-            } catch(Exception e){
+            } catch(Exception e)
+            {
                 e.printStackTrace();
             }
 
-
-
-            if(timeValues.size() != 0)
+            if(!timeValues.isEmpty())
             {
+                int count=0;
                 Log.i("timeValues.isEmpty()", "Entered if statement");
-                for(int i=0; i < timeValues.size(); i++)
-                {
-                    MainActivity.time.setText(timeValues.get(i) + " mph after 10 seconds" + "\n");
-                    Row row = sheet.createRow(i);
-                    row.createCell(0).setCellValue(timeValues.get(i) + 1);
-                    Log.i("Creating cells", "Cells created with value: " + timeValues.get(i));
+                if(count < timeValues.size()) {
+                    for(int i=0; i < timeValues.size(); i++)
+                    {
+                        MainActivity.time.setText(timeValues.get(i) + " mph after 10 seconds" + "\n");
+                        Row row = sheet.createRow(i);
+                        row.createCell(0).setCellValue("Value number: " + (i+1));
+                        row.createCell(1).setCellValue(timeValues.get(i));
+                        Log.i("Creating cells", "Cells created with value: " + timeValues.get(i));
+                        count++;
+                    }
                 }
-
                  FileOutputStream fileOut = new FileOutputStream(file, true);
                  workbook.write(fileOut);
                  fileOut.close();
                  workbook.close();
-
-
             }
-
-
             lStart = lEnd;
-
         }
-
     }
 
 

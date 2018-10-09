@@ -10,27 +10,45 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity  {
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
+public class MainActivity extends AppCompatActivity {
+
+    TextView time, speed, notifyButtonPressed;
+    Button start, pause, stop;
+    Button startTimer;
+    long startTime, endTime, currentTimeSeconds, timeElapsed;
+    static ProgressDialog locate;
+    static int p = 0;
     LocationService myService;
     boolean status;
     LocationManager locationManager;
-    static TextView time, speed, notifyButtonPressed;
-    static Button start, pause, stop;
-    static Button startTimer;
-    static long startTime, endTime;
     ImageView image;
-    static ProgressDialog locate;
-    static int p = 0;
+    public static double speedValue=0;
+    public boolean hasClockStarted;
+    public ArrayList<Double> timeValues = new ArrayList<>();
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -58,7 +76,6 @@ public class MainActivity extends AppCompatActivity  {
     void unbindService() {
         if (!status)
             return;
-        Intent i = new Intent(getApplicationContext(), LocationService.class);
         unbindService(sc);
         status = false;
     }
@@ -66,21 +83,21 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onResume() {
         super.onResume();
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
     }
 
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (status)
+        if (status){
             unbindService();
+            Thread.interrupted();
+        }
     }
 
     @Override
@@ -98,25 +115,41 @@ public class MainActivity extends AppCompatActivity  {
         System.setProperty("org.apache.poi.javax.xml.stream.XMLOutputFactory", "com.fasterxml.aalto.stax.OutputFactoryImpl");
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
 
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                while(!isInterrupted()) {
+                    try{
+                        Thread.sleep(10000);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try { updateUI(); }
+                                catch(Exception e){e.printStackTrace();}
+                            }
+                        });
+                    } catch(Exception e) { e.printStackTrace();}
+                }
+            }
+        };
+        t.start();
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-        } else if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, 2);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3);
         }
 
         notifyButtonPressed = findViewById(R.id.notifyButtonPressed);
         notifyButtonPressed.setVisibility(View.GONE);
-        time =  findViewById(R.id.timetext);
-        speed =  findViewById(R.id.speedtext);
+        time = findViewById(R.id.timetext);
+        speed = findViewById(R.id.speedtext);
 
         start = findViewById(R.id.start);
-        pause =  findViewById(R.id.pause);
-        stop =  findViewById(R.id.stop);
+        pause = findViewById(R.id.pause);
+        stop = findViewById(R.id.stop);
 
         image = findViewById(R.id.image);
         startTimer = findViewById(R.id.startTimerButton);
@@ -128,16 +161,15 @@ public class MainActivity extends AppCompatActivity  {
 
                 //The method below checks if Location is enabled on device or not. If not, then an alert dialog box appears with option
                 //to enable gps.
-                checkGps();
                 locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
+                checkGps();
                 if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     return;
                 }
 
 
                 if (!status)
-                    //Here, the Location Service gets bound and the GPS Speedometer gets Active.
+                //Here, the Location Service gets bound and the GPS Speedometer gets Active.
                 {
                     bindService();
                 }
@@ -171,7 +203,7 @@ public class MainActivity extends AppCompatActivity  {
                         return;
                     }
                     pause.setText("Pause");
-                     p = 0;
+                    p = 0;
                 }
             }
         });
@@ -180,13 +212,15 @@ public class MainActivity extends AppCompatActivity  {
         stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (status)
+                if (status) {
                     unbindService();
+                    Log.i("Stop button pressed", "unbound");
+                }
                 start.setVisibility(View.VISIBLE);
                 pause.setText("Pause");
                 pause.setVisibility(View.GONE);
                 stop.setVisibility(View.GONE);
-               p =0;
+                p = 0;
             }
         });
 
@@ -223,6 +257,90 @@ public class MainActivity extends AppCompatActivity  {
                 });
         AlertDialog alert = alertDialogBuilder.create();
         alert.show();
+    }
+
+
+    public void updateUI() throws IOException {
+
+        if (p == 0) {
+
+            endTime = System.currentTimeMillis();
+            long diff = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+
+            speed.setSingleLine(false);
+            time.setSingleLine(false);
+
+            time.setText("Total Time: " + diff + " minutes");
+            if (speedValue >= 0.0 && (speedValue < 90.0)) {
+                speed.setText(getString(R.string.accelerate_instruction) + new DecimalFormat("#.##").format(speedValue) + getString(R.string.default_mph));
+                if (speedValue > 30 && !hasClockStarted) {
+                    startTimer.setVisibility(View.VISIBLE);
+                    Log.i("Start timer button", "Start timer button has been displayed");
+                } else {
+                    startTimer.setVisibility(View.INVISIBLE);
+                }
+            }
+
+            startTimer.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    notifyButtonPressed.setVisibility(View.VISIBLE);
+                    hasClockStarted = true;
+                    startTime = System.currentTimeMillis() / 1000;
+                    Log.i("Start time seconds: ", startTime + " start time seconds");
+                }
+            });
+
+            currentTimeSeconds = System.currentTimeMillis() / 1000;
+            timeElapsed = currentTimeSeconds - startTime;
+
+            Log.i("Current time seconds: ", currentTimeSeconds + " current time seconds");
+            Log.i("Subtraction ", "Difference: " + timeElapsed);
+
+            if (timeElapsed % 10 == 0 && timeElapsed != 0 && hasClockStarted) {
+                timeValues.add(speedValue);
+                Log.i("Adding speed to array", "Current speed of " + speed + " mph was added to the array");
+            }
+
+
+            String path = "/sdcard/Android/data/timevalues.xlsx";
+            Log.i("The path is: ", path);
+            String path2 = Environment.getExternalStorageDirectory().getPath();
+            Log.i("Path 2 is: ", path2);
+            File file = new File(path);
+            Sheet sheet = null;
+            Workbook workbook = null;
+
+            if (!timeValues.isEmpty()) {
+                try {
+                    workbook = WorkbookFactory.create(file);
+                    if (!workbook.getSheetName(1).equals("sheetone")) {
+                        sheet = workbook.createSheet("sheetone");
+                    } else {
+                        sheet = workbook.getSheetAt(1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                int count = 0;
+                Log.i("timeValues.isEmpty()", "Entered if statement");
+                if (count < timeValues.size()) {
+                    for (int i = 0; i < timeValues.size(); i++) {
+                        time.setText(timeValues.get(i) + " mph after 10 seconds" + "\n");
+                        Row row = sheet.createRow(i);
+                        row.createCell(0).setCellValue("Value number: " + (i + 1));
+                        row.createCell(1).setCellValue(timeValues.get(i));
+                        Log.i("Creating cells", "Cells created with value: " + timeValues.get(i));
+                        count++;
+                    }
+                }
+                FileOutputStream fileOut = new FileOutputStream(file, true);
+                workbook.write(fileOut);
+                fileOut.close();
+                workbook.close();
+            }
+        }
     }
 
 

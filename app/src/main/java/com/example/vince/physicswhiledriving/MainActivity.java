@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     public static double speedValue=0;
     public boolean hasClockStarted;
     public ArrayList<Double> timeValues = new ArrayList<>();
+    Thread t;
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         if (status){
             unbindService();
-            Thread.interrupted();
+            t.isInterrupted();
         }
     }
 
@@ -115,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         System.setProperty("org.apache.poi.javax.xml.stream.XMLOutputFactory", "com.fasterxml.aalto.stax.OutputFactoryImpl");
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
 
-        Thread t = new Thread() {
+        t = new Thread() {
             @Override
             public void run() {
                 while(!isInterrupted()) {
@@ -181,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
                 start.setVisibility(View.GONE);
                 pause.setVisibility(View.VISIBLE);
-                pause.setText("Pause");
+                pause.setText(R.string.Pause);
                 stop.setVisibility(View.VISIBLE);
 
 
@@ -192,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (pause.getText().toString().equalsIgnoreCase("pause")) {
-                    pause.setText("Resume");
+                    pause.setText(R.string.Resume);
                     p = 1;
 
                 } else if (pause.getText().toString().equalsIgnoreCase("Resume")) {
@@ -202,7 +203,7 @@ public class MainActivity extends AppCompatActivity {
                         //Toast.makeText(this, "GPS is Enabled in your device", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    pause.setText("Pause");
+                    pause.setText(R.string.Pause);
                     p = 0;
                 }
             }
@@ -217,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("Stop button pressed", "unbound");
                 }
                 start.setVisibility(View.VISIBLE);
-                pause.setText("Pause");
+                pause.setText(R.string.Pause);
                 pause.setVisibility(View.GONE);
                 stop.setVisibility(View.GONE);
                 p = 0;
@@ -270,9 +271,13 @@ public class MainActivity extends AppCompatActivity {
             speed.setSingleLine(false);
             time.setSingleLine(false);
 
-            time.setText("Total Time: " + diff + " minutes");
+            String totalTime = "Total time: " + diff + " minutes";
+            String speedValueFormatted;
+            time.setText(totalTime);
             if (speedValue >= 0.0 && (speedValue < 90.0)) {
-                speed.setText(getString(R.string.accelerate_instruction) + new DecimalFormat("#.##").format(speedValue) + getString(R.string.default_mph));
+                speedValueFormatted = getString(R.string.accelerate_instruction) + new DecimalFormat("#.##").format(speedValue) + getString(R.string.default_mph);
+                speed.setText(speedValueFormatted);
+
                 if (speedValue > 30 && !hasClockStarted) {
                     startTimer.setVisibility(View.VISIBLE);
                     Log.i("Start timer button", "Start timer button has been displayed");
@@ -324,10 +329,13 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 int count = 0;
+                String speedNotice;
                 Log.i("timeValues.isEmpty()", "Entered if statement");
                 if (count < timeValues.size()) {
                     for (int i = 0; i < timeValues.size(); i++) {
-                        time.setText(timeValues.get(i) + " mph after 10 seconds" + "\n");
+                        speedNotice = timeValues.get(i) + " mph after 10 seconds" + "\n";
+                        time.setText(speedNotice);
+
                         Row row = sheet.createRow(i);
                         row.createCell(0).setCellValue("Value number: " + (i + 1));
                         row.createCell(1).setCellValue(timeValues.get(i));

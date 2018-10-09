@@ -8,6 +8,7 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -18,8 +19,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-
-import java.util.ArrayList;
 
 public class LocationService extends Service implements
         com.google.android.gms.location.LocationListener,
@@ -34,10 +33,6 @@ public class LocationService extends Service implements
     public GoogleApiClient mGoogleApiClient;
     public Location mCurrentLocation;
     public double speed;
-    public ArrayList<Double> timeValues = new ArrayList<>();
-    boolean wasSpeedAbove55 = false;
-    long startTime;
-    boolean hasClockStarted = false;
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationCallback mLocationCallback = new LocationCallback() {
         @Override
@@ -119,7 +114,7 @@ public class LocationService extends Service implements
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
     @Override

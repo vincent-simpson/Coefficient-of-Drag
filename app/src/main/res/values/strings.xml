@@ -11,6 +11,7 @@
     <string name="accelerate_instruction">Accelerate above 55 mph SAFELY!\nCurrent speed:\u0020</string>
     <string name="above_55">You\'re above 55 mph! Shift into neutral\nCurrent Speed:\u0020</string>
     <string name="default_mph">\u0020mph</string>
-    <string name="pause">Pause</string>
-    <string name="stop">Stop</string>
+    <string name="Pause">Pause</string>
+    <string name="Stop">Stop</string>
+    <string name="Resume">Resume</string>
 </resources>

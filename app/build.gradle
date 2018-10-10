@@ -4,7 +4,7 @@ android {
     compileSdkVersion 27
     defaultConfig {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        applicationId "com.example.vince.physicswhiledriving"
+        applicationId "com.company.vince.physicswhiledriving"
         minSdkVersion 15
         targetSdkVersion 27
         versionCode 1
@@ -35,7 +35,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test:rules:1.0.2'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation files('build/libs/poishadow-all.jar')
+    implementation files('src/poishadow-all.jar')
     implementation 'com.android.support:multidex:1.0.3'
 
 

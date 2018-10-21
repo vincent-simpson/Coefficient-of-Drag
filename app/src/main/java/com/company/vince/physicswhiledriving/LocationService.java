@@ -34,21 +34,25 @@ public class LocationService extends Service implements
     public Location mCurrentLocation;
     public double speed;
     private FusedLocationProviderClient mFusedLocationClient;
-    private LocationCallback mLocationCallback = new LocationCallback() {
+    private LocationCallback mLocationCallback = new LocationCallback()
+    {
         @Override
-        public void onLocationResult(LocationResult locationResult) {
+        public void onLocationResult(LocationResult locationResult)
+        {
             onLocationChanged(locationResult.getLastLocation());
         }
     };
 
     @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         createGoogleApiConnection();
         return mBinder;
     }
 
-    protected void createGoogleApiConnection() {
+    protected void createGoogleApiConnection()
+    {
         createLocationRequest();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -59,7 +63,8 @@ public class LocationService extends Service implements
     }
 
 
-    protected void createLocationRequest() {
+    protected void createLocationRequest()
+    {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(INTERVAL);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -68,24 +73,29 @@ public class LocationService extends Service implements
 
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
         return super.onStartCommand(intent, flags, startId);
     }
 
 
     @Override
-    public void onConnected(Bundle bundle) {
+    public void onConnected(Bundle bundle)
+    {
         requestLocationUpdates();
     }
 
     @SuppressLint("MissingPermission")
-    private void requestLocationUpdates() {
+    private void requestLocationUpdates()
+    {
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
     }
 
 
-    protected void stopLocationUpdates() {
-        if (mFusedLocationClient != null) {
+    protected void stopLocationUpdates()
+    {
+        if (mFusedLocationClient != null)
+        {
             mFusedLocationClient.removeLocationUpdates(mLocationCallback);
             mFusedLocationClient = null;
             mLocationRequest = null;
@@ -94,39 +104,47 @@ public class LocationService extends Service implements
 
 
     @Override
-    public void onConnectionSuspended(int i) {
+    public void onConnectionSuspended(int i)
+    {
     }
 
-
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(Location location)
+    {
         MainActivity.locate.dismiss();
-        if (location == null) {
+        if (location == null)
+        {
             mCurrentLocation = location;
-        } else if (isBetterLocation(location, mCurrentLocation)) {
+        } else if (isBetterLocation(location, mCurrentLocation))
+        {
             mCurrentLocation = location;
             MainActivity.speedValue = mCurrentLocation.getSpeed() * 2.2369;
             Log.i("Current speed", "Your current speed is " + speed);
-        } else {
+        } else
+        {
             MainActivity.speedValue = location.getSpeed() * 2.2369;
             Log.i("Current speed", "Your current speed is " + speed);
         }
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult)
+    {
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
+    public boolean onUnbind(Intent intent)
+    {
         stopLocationUpdates();
         if (mGoogleApiClient.isConnected())
             mGoogleApiClient.disconnect();
         return super.onUnbind(intent);
     }
 
-    protected boolean isBetterLocation(Location location, Location currentBestLocation) {
-        if (currentBestLocation == null) {
+    protected boolean isBetterLocation(Location location, Location currentBestLocation)
+    {
+        if (currentBestLocation == null)
+        {
             return true;
         }
 
@@ -135,9 +153,11 @@ public class LocationService extends Service implements
         boolean isSignificantlyOlder = timeDelta < -ONE_SECOND;
         boolean isNewer = timeDelta > 0;
 
-        if (isSignificantlyNewer) {
+        if (isSignificantlyNewer)
+        {
             return true;
-        } else if (isSignificantlyOlder) {
+        } else if (isSignificantlyOlder)
+        {
             return false;
         }
 
@@ -151,15 +171,19 @@ public class LocationService extends Service implements
         return isMoreAccurate || (isNewer && !isLessAccurate) || (isNewer && !isSignificantlyLessAccurate && isFromSameProvider);
     }
 
-    private boolean isSameProvider(String provider1, String provider2) {
-        if (provider1 == null) {
+    private boolean isSameProvider(String provider1, String provider2)
+    {
+        if (provider1 == null)
+        {
             return provider2 == null;
         }
         return provider1.equals(provider2);
     }
 
-    class LocalBinder extends Binder {
-        LocationService getService() {
+    class LocalBinder extends Binder
+    {
+        LocationService getService()
+        {
             return LocationService.this;
         }
     }

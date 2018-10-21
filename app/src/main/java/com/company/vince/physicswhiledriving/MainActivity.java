@@ -1,3 +1,7 @@
+/*TODO
+
+ */
+
 package com.company.vince.physicswhiledriving;
 
 import android.Manifest;
@@ -22,6 +26,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -30,26 +35,29 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int ONE_SECOND = 1000;
+    public static double speedValue;
+    static ProgressDialog locate;
+    static int p = 0;
+    public boolean hasClockStarted;
+    public ArrayList<Double> timeValues = new ArrayList<>();
+
     TextView time, speed, notifyButtonPressed;
     Button start, pause, stop;
     Button startTimer;
-    long startTime, endTime, currentTimeSeconds, timeElapsed;
-    static ProgressDialog locate;
-    static int p = 0;
+
+    long startTime, endTime, currentTime, timeElapsed;
     LocationService myService;
     boolean status;
     LocationManager locationManager;
     ImageView image;
-    public static double speedValue=0;
-    public boolean hasClockStarted;
-    public ArrayList<Double> timeValues = new ArrayList<>();
     Thread t;
+    boolean threadInterrupted = false;
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -91,14 +99,18 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (status) {
+            unbindService();
+        }
+    }
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (status){
-            unbindService();
-            t.isInterrupted();
-        }
     }
 
     @Override
@@ -116,20 +128,28 @@ public class MainActivity extends AppCompatActivity {
         System.setProperty("org.apache.poi.javax.xml.stream.XMLOutputFactory", "com.fasterxml.aalto.stax.OutputFactoryImpl");
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
 
+        checkLocationPermissions();
+        checkWriteToStoragePermissions();
+
         t = new Thread() {
             @Override
             public void run() {
-                while(!isInterrupted()) {
-                    try{
-                        Thread.sleep(10000);
+                while (!threadInterrupted) {
+                    try {
+                        Thread.sleep(ONE_SECOND);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                try { updateUI(); }
-                                catch(Exception e){e.printStackTrace();}
+                                try {
+                                    updateUI();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
                         });
-                    } catch(Exception e) { e.printStackTrace();}
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
@@ -138,10 +158,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3);
-        }
 
         notifyButtonPressed = findViewById(R.id.notifyButtonPressed);
         notifyButtonPressed.setVisibility(View.GONE);
@@ -193,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (pause.getText().toString().equalsIgnoreCase("pause")) {
+                    threadInterrupted = true;
                     pause.setText(R.string.Resume);
                     p = 1;
 
@@ -203,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
                         //Toast.makeText(this, "GPS is Enabled in your device", Toast.LENGTH_SHORT).show();
                         return;
                     }
+                    threadInterrupted = false;
                     pause.setText(R.string.Pause);
                     p = 0;
                 }
@@ -214,7 +232,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (status) {
-                    unbindService();
+                    threadInterrupted = true;
+                    onStop();
                     Log.i("Stop button pressed", "unbound");
                 }
                 start.setVisibility(View.VISIBLE);
@@ -227,8 +246,18 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    void checkLocationPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 4);
+        }
+    }
 
-    //This method leads you to the alert dialog box.
+    void checkWriteToStoragePermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3);
+        }
+    }
+
     void checkGps() {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
@@ -237,7 +266,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //This method configures the Alert Dialog box.
     private void showGPSDisabledAlertToUser() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage("Enable GPS to use application")
@@ -260,7 +288,10 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
-
+    /**
+     *
+     * @throws IOException
+     */
     public void updateUI() throws IOException {
 
         if (p == 0) {
@@ -274,8 +305,9 @@ public class MainActivity extends AppCompatActivity {
             String totalTime = "Total time: " + diff + " minutes";
             String speedValueFormatted;
             time.setText(totalTime);
+
             if (speedValue >= 0.0 && (speedValue < 90.0)) {
-                speedValueFormatted = getString(R.string.accelerate_instruction) + new DecimalFormat("#.##").format(speedValue) + getString(R.string.default_mph);
+                speedValueFormatted = getString(R.string.accelerate_instruction) + speedValue + getString(R.string.default_mph);
                 speed.setText(speedValueFormatted);
 
                 if (speedValue > 30 && !hasClockStarted) {
@@ -291,22 +323,21 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     notifyButtonPressed.setVisibility(View.VISIBLE);
                     hasClockStarted = true;
-                    startTime = System.currentTimeMillis() / 1000;
+                    startTime = System.currentTimeMillis();
                     Log.i("Start time seconds: ", startTime + " start time seconds");
                 }
             });
 
-            currentTimeSeconds = System.currentTimeMillis() / 1000;
-            timeElapsed = currentTimeSeconds - startTime;
+            currentTime = System.currentTimeMillis();
+            timeElapsed = TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime);
 
-            Log.i("Current time seconds: ", currentTimeSeconds + " current time seconds");
+            Log.i("Current time seconds: ", currentTime + " current time seconds");
             Log.i("Subtraction ", "Difference: " + timeElapsed);
 
             if (timeElapsed % 10 == 0 && timeElapsed != 0 && hasClockStarted) {
                 timeValues.add(speedValue);
                 Log.i("Adding speed to array", "Current speed of " + speed + " mph was added to the array");
             }
-
 
             String path = "/sdcard/Android/data/timevalues.xlsx";
             Log.i("The path is: ", path);
@@ -315,15 +346,13 @@ public class MainActivity extends AppCompatActivity {
             File file = new File(path);
             Sheet sheet = null;
             Workbook workbook = null;
+            Row row;
+            Cell cell;
 
             if (!timeValues.isEmpty()) {
                 try {
                     workbook = WorkbookFactory.create(file);
-                    if (!workbook.getSheetName(1).equals("sheetone")) {
-                        sheet = workbook.createSheet("sheetone");
-                    } else {
-                        sheet = workbook.getSheetAt(1);
-                    }
+                    sheet = workbook.getSheetAt(0);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -336,9 +365,13 @@ public class MainActivity extends AppCompatActivity {
                         speedNotice = timeValues.get(i) + " mph after 10 seconds" + "\n";
                         time.setText(speedNotice);
 
-                        Row row = sheet.createRow(i);
-                        row.createCell(0).setCellValue("Value number: " + (i + 1));
-                        row.createCell(1).setCellValue(timeValues.get(i));
+                        row = sheet.getRow(i + 6);
+                        cell = row.getCell(1);
+
+                        cell.setCellValue(timeValues.get(i));
+
+//                        row.createCell(0).setCellValue("Value number: " + (i + 1));
+//                        row.createCell(1).setCellValue(timeValues.get(i));
                         Log.i("Creating cells", "Cells created with value: " + timeValues.get(i));
                         count++;
                     }

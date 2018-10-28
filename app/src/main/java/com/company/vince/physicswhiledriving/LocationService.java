@@ -82,6 +82,7 @@ public class LocationService extends Service implements
     @Override
     public void onConnected(Bundle bundle)
     {
+        MainActivity.locate.dismiss();
         requestLocationUpdates();
     }
 
@@ -111,7 +112,6 @@ public class LocationService extends Service implements
     @Override
     public void onLocationChanged(Location location)
     {
-        MainActivity.locate.dismiss();
         if (location == null)
         {
             mCurrentLocation = location;

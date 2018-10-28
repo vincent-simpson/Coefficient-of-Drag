@@ -14,7 +14,6 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -26,14 +25,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -47,10 +38,11 @@ public class MainActivity extends AppCompatActivity
     static int p = 0;
     public boolean hasClockStarted;
     public ArrayList<Double> timeValues = new ArrayList<>();
+    int col=0;
 
     TextView time, speed, notifyButtonPressed;
     Button start, pause, stop;
-    Button startTimer;
+    Button startTimer, nextTrial;
 
     long startTime, endTime, currentTime, timeElapsed;
     LocationService myService;
@@ -59,6 +51,7 @@ public class MainActivity extends AppCompatActivity
     ImageView image;
     Thread t;
     boolean threadInterrupted = false;
+
 
     private ServiceConnection sc = new ServiceConnection()
     {
@@ -117,7 +110,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-
     @Override
     protected void onDestroy()
     {
@@ -170,10 +162,13 @@ public class MainActivity extends AppCompatActivity
             }
         };
         t.start();
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        nextTrial = findViewById(R.id.iterationButton);
+        nextTrial.setVisibility(View.GONE);
 
         notifyButtonPressed = findViewById(R.id.notifyButtonPressed);
         notifyButtonPressed.setVisibility(View.GONE);
@@ -188,27 +183,36 @@ public class MainActivity extends AppCompatActivity
         startTimer = findViewById(R.id.startTimerButton);
         startTimer.setVisibility(View.GONE);
 
+        nextTrial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                col++;
+                startTimer.performClick();
+                nextTrial.setVisibility(View.GONE);
+                timeValues.clear();
+            }
+
+        });
+
         start.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
             {
-
-                //The method below checks if Location is enabled on device or not. If not, then an alert dialog box appears with option
-                //to enable gps.
+                if (!t.isAlive())
+                {
+                    t.run();
+                }
+                threadInterrupted = false;
+                Log.i("Is thread active", t.isAlive() + "");
                 locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
                 checkGps();
                 if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                {
                     return;
-                }
-
 
                 if (!status)
-                //Here, the Location Service gets bound and the GPS Speedometer gets Active.
-                {
                     bindService();
-                }
+
                 locate = new ProgressDialog(MainActivity.this);
                 locate.setIndeterminate(true);
                 locate.setCancelable(false);
@@ -219,8 +223,6 @@ public class MainActivity extends AppCompatActivity
                 pause.setVisibility(View.VISIBLE);
                 pause.setText(R.string.Pause);
                 stop.setVisibility(View.VISIBLE);
-
-
             }
         });
 
@@ -233,7 +235,6 @@ public class MainActivity extends AppCompatActivity
                 {
                     threadInterrupted = true;
                     pause.setText(R.string.Resume);
-                    p = 1;
 
                 } else if (pause.getText().toString().equalsIgnoreCase("Resume"))
                 {
@@ -246,7 +247,6 @@ public class MainActivity extends AppCompatActivity
                     }
                     threadInterrupted = false;
                     pause.setText(R.string.Pause);
-                    p = 0;
                 }
             }
         });
@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity
                 pause.setText(R.string.Pause);
                 pause.setVisibility(View.GONE);
                 stop.setVisibility(View.GONE);
-                p = 0;
+                threadInterrupted = true;
             }
         });
 
@@ -331,115 +331,87 @@ public class MainActivity extends AppCompatActivity
      */
     public void updateUI()
     {
+        speed.setSingleLine(false);
+        time.setSingleLine(false);
 
-        if (p == 0)
+        endTime = System.currentTimeMillis();
+        long diff = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+
+
+        if (diff > 1000000)
+            diff = 0;
+
+        String totalTime = "Total time: " + diff + " minutes";
+
+        time.setText(totalTime);
+
+        if (speedValue >= 0.0 && (speedValue < 90.0))
         {
+            speed.setText(String.format("Current speed: %.2f mph", speedValue));
 
-            endTime = System.currentTimeMillis();
-            long diff = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-
-            speed.setSingleLine(false);
-            time.setSingleLine(false);
-
-            String totalTime = "Total time: " + diff + " minutes";
-            String speedValueFormatted;
-            time.setText(totalTime);
-
-            if (speedValue >= 0.0 && (speedValue < 90.0))
+            if (speedValue > 50 && !hasClockStarted)
             {
-                speedValueFormatted = getString(R.string.accelerate_instruction) + speedValue + getString(R.string.default_mph);
-                speed.setText(speedValueFormatted);
-
-                if (speedValue > 30 && !hasClockStarted)
-                {
-                    startTimer.setVisibility(View.VISIBLE);
-                    Log.i("Start timer button", "Start timer button has been displayed");
-                } else
-                {
-                    startTimer.setVisibility(View.INVISIBLE);
-                }
-            }
-
-            startTimer.setOnClickListener(new View.OnClickListener()
+                startTimer.setVisibility(View.VISIBLE);
+                Log.i("Start timer button", "Start timer button has been displayed");
+            } else
             {
-                @Override
-                public void onClick(View v)
-                {
-                    notifyButtonPressed.setVisibility(View.VISIBLE);
-                    hasClockStarted = true;
-                    startTime = System.currentTimeMillis();
-                    Log.i("Start time seconds: ", startTime + " start time seconds");
-                }
-            });
-
-            currentTime = System.currentTimeMillis();
-            timeElapsed = TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime);
-
-            Log.i("Current time seconds: ", currentTime + " current time seconds");
-            Log.i("Subtraction ", "Difference: " + timeElapsed);
-
-            if (timeElapsed % 10 == 0 && timeElapsed != 0 && hasClockStarted)
-            {
-                timeValues.add(speedValue);
-                Log.i("Adding speed to array", "Current speed of " + speed + " mph was added to the array");
-            }
-
-            String path = "/sdcard/Android/data/timevalues.xlsx";
-            Log.i("The path is: ", path);
-            String path2 = Environment.getExternalStorageDirectory().getPath();
-            Log.i("Path 2 is: ", path2);
-            File file = new File(path);
-            Sheet sheet = null;
-            Workbook workbook = null;
-            Row row;
-            Cell cell;
-
-            if (!timeValues.isEmpty())
-            {
-                try
-                {
-                    workbook = WorkbookFactory.create(file);
-                    sheet = workbook.getSheetAt(0);
-                } catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-
-                int count = 0;
-                String speedNotice;
-                Log.i("timeValues.isEmpty()", "Entered if statement");
-                if (count < timeValues.size())
-                {
-                    for (int i = 0; i < timeValues.size(); i++)
-                    {
-                        speedNotice = timeValues.get(i) + " mph after 10 seconds" + "\n";
-                        time.setText(speedNotice);
-
-                        row = sheet.getRow(i + 6);
-                        cell = row.getCell(1);
-
-                        cell.setCellValue(timeValues.get(i));
-
-//                        row.createCell(0).setCellValue("Value number: " + (i + 1));
-//                        row.createCell(1).setCellValue(timeValues.get(i));
-                        Log.i("Creating cells", "Cells created with value: " + timeValues.get(i));
-                        count++;
-                    }
-                }
-                try
-                {
-                    FileOutputStream fileOut = new FileOutputStream(file, true);
-                    workbook.write(fileOut);
-                    fileOut.close();
-                    workbook.close();
-                } catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-
+                startTimer.setVisibility(View.INVISIBLE);
             }
         }
+
+        if(timeValues.size() % 8 == 0 && !timeValues.isEmpty()) {
+            nextTrial.setVisibility(View.VISIBLE);
+        }
+
+        startTimer.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                notifyButtonPressed.setVisibility(View.VISIBLE);
+                hasClockStarted = true;
+                startTime = System.currentTimeMillis();
+                Log.i("Start time seconds: ", startTime + " start time seconds");
+            }
+        });
+
+        currentTime = System.currentTimeMillis();
+        timeElapsed = TimeUnit.MILLISECONDS.toSeconds(currentTime - startTime);
+
+        Log.i("Current time seconds: ", currentTime + " current time seconds");
+        Log.i("Subtraction ", "Difference: " + timeElapsed);
+
+        if (((timeElapsed % 10) == 0) && (timeElapsed != 0) && hasClockStarted && (timeValues.size() < 8))
+        {
+            timeValues.add(speedValue);
+            Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array");
+        }
+
+
+        double[][] a = {
+                {1, 1, 1, 1, 1, 1},
+                {2, 2, 2, 2, 2, 2},
+                {3, 3, 3, 3, 3, 3},
+                {4, 4, 4, 4, 4, 4},
+                {5, 5, 5, 5, 5, 5},
+                {6, 6, 6, 6, 6, 6},
+                {7, 7, 7, 7, 7, 7},
+                {8, 8, 8, 8, 8, 8}
+        };
+
+        for(int i=0; i < 6; i++){
+            for(int j=0; j < 8; j++) {
+                a[j][i] = timeValues.get(j);
+            }
+        }
+        CalculationOfVDCCRR calculation = new CalculationOfVDCCRR(a);
+        calculation.calculateAverageVelocity();
+        calculation.printAverageVelocities();
+
+
+        Log.i("Speed value: ", speedValue + "");
     }
+
 
 
 }

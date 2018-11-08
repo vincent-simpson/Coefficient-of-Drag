@@ -23,14 +23,14 @@
         android:id="@+id/speedtext"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="120dp"
+        android:layout_marginTop="108dp"
         android:gravity="center"
         android:singleLine="true"
         android:text="@string/inst_speed"
         android:textColor="@android:color/black"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -52,6 +52,7 @@
 
     <Button
         android:id="@+id/start"
+        style="@style/Widget.AppCompat.Button"
         android:layout_width="0dp"
         android:layout_height="118dp"
         android:layout_marginTop="8dp"
@@ -74,7 +75,7 @@
         android:layout_marginRight="8dp"
         android:background="@android:color/black"
         android:text="@string/Pause"
-        android:textColor="@android:color/background_light"
+        android:textAppearance="@android:style/TextAppearance.Holo.Widget.Button"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -154,6 +155,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.699" />
+
+    <Button
+        android:id="@+id/iterationButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Next iteration"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.519"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.467" />
 
 
 </android.support.constraint.ConstraintLayout>

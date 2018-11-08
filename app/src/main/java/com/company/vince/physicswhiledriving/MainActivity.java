@@ -38,7 +38,10 @@ public class MainActivity extends AppCompatActivity
     static int p = 0;
     public boolean hasClockStarted;
     public ArrayList<Double> timeValues = new ArrayList<>();
-    int col=0;
+    public ArrayList<Double> trial1, trial2, trial3, trial4, trial5, trial6;
+    public double[] trialValuesTwoDimensions;
+
+    int trialNum =1;
 
     TextView time, speed, notifyButtonPressed;
     Button start, pause, stop;
@@ -168,7 +171,7 @@ public class MainActivity extends AppCompatActivity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         nextTrial = findViewById(R.id.iterationButton);
-        nextTrial.setVisibility(View.GONE);
+        nextTrial.setVisibility(View.VISIBLE);
 
         notifyButtonPressed = findViewById(R.id.notifyButtonPressed);
         notifyButtonPressed.setVisibility(View.GONE);
@@ -186,10 +189,25 @@ public class MainActivity extends AppCompatActivity
         nextTrial.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                col++;
-                startTimer.performClick();
-                nextTrial.setVisibility(View.GONE);
-                timeValues.clear();
+                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
+                alertBuilder.setMessage("Proceed to next trial?").setCancelable(true)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                trialNum++;
+                                startTimer.performClick();
+                            }
+                        });
+                alertBuilder.setNegativeButton("No", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        dialog.cancel();
+                    }
+                });
             }
 
         });
@@ -381,35 +399,58 @@ public class MainActivity extends AppCompatActivity
         Log.i("Current time seconds: ", currentTime + " current time seconds");
         Log.i("Subtraction ", "Difference: " + timeElapsed);
 
-        if (((timeElapsed % 10) == 0) && (timeElapsed != 0) && hasClockStarted && (timeValues.size() < 8))
+        if (((timeElapsed % 10) == 0) && (timeElapsed != 0) && hasClockStarted)
         {
-            timeValues.add(speedValue);
+            switch(trialNum) {
+                case 1: trial1.add(speedValue);
+                case 2: trial2.add(speedValue);
+                case 3: trial3.add(speedValue);
+                case 4: trial4.add(speedValue);
+                case 5: trial5.add(speedValue);
+                case 6: trial6.add(speedValue);
+            }
             Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array");
         }
 
 
         double[][] a = {
-                {1, 1, 1, 1, 1, 1},
-                {2, 2, 2, 2, 2, 2},
-                {3, 3, 3, 3, 3, 3},
-                {4, 4, 4, 4, 4, 4},
-                {5, 5, 5, 5, 5, 5},
-                {6, 6, 6, 6, 6, 6},
-                {7, 7, 7, 7, 7, 7},
-                {8, 8, 8, 8, 8, 8}
+                {70, 70, 70, 70, 70, 70},
+                {60, 60, 60, 60, 61, 60},
+                {55, 52, 51, 51, 52, 51},
+                {40, 44, 43, 43, 43, 44},
+                {37, 37, 38, 37, 37, 37.5},
+                {32, 32, 32, 32, 32, 32},
+                {0, 22, 0, 0, 27.5, 27},
+                {0, 0, 0, 0, 0, 0}
+
         };
 
-        for(int i=0; i < 6; i++){
-            for(int j=0; j < 8; j++) {
-                a[j][i] = timeValues.get(j);
-            }
-        }
+        /* {6, 6, 6, 6, 6, 6},
+        {7, 7, 7, 7, 7, 7},
+        {8, 8, 8, 8, 8, 8}*/
+
+//        for(int i=0; i < 6; i++){
+//            for(int j=0; j < 8; j++) {
+//                a[j][i] = timeValues.get(j);
+//            }
+//        }
         CalculationOfVDCCRR calculation = new CalculationOfVDCCRR(a);
         calculation.calculateAverageVelocity();
-        calculation.printAverageVelocities();
+        calculation.calculateActualVelocity();
+        calculation.calculateForce();
+        calculation.calculateAcceleration();
+        calculation.calculateModelVelocity();
+
+        //calculation.printActualVelocities();
+        calculation.printModelVelocities();
+        //calculation.printAverageVelocities();
 
 
         Log.i("Speed value: ", speedValue + "");
+    }
+
+    public void moveArrayListsToTwoD() {
+
     }
 
 

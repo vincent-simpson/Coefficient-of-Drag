@@ -412,7 +412,7 @@ public class MainActivity extends AppCompatActivity
             Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array");
         }
 
-
+        //Array that represents the velocity decreasing as a function of time
         double[][] a = {
                 {70, 70, 70, 70, 70, 70},
                 {60, 60, 60, 60, 61, 60},
@@ -422,7 +422,6 @@ public class MainActivity extends AppCompatActivity
                 {32, 32, 32, 32, 32, 32},
                 {0, 22, 0, 0, 27.5, 27},
                 {0, 0, 0, 0, 0, 0}
-
         };
 
         /* {6, 6, 6, 6, 6, 6},
@@ -435,8 +434,11 @@ public class MainActivity extends AppCompatActivity
 //            }
 //        }
         CalculationOfVDCCRR calculation = new CalculationOfVDCCRR(a);
+
         calculation.calculateAverageVelocity();
         calculation.calculateActualVelocity();
+
+
         calculation.calculateForce();
         calculation.calculateAcceleration();
         calculation.calculateModelVelocity();

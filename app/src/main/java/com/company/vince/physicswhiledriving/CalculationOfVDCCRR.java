@@ -43,13 +43,20 @@ public class CalculationOfVDCCRR
     public void calculateAverageVelocity()
     {
         double sum;
+        int count;
         for(int i=0; i < 8; i++)
         {
             sum=0;
+            count=0;
             for(int j=0; j < 6; j++) {
-                sum += v1[i][j];
+                if(v1[i][j] != 0.0){
+                    sum += v1[i][j];
+                    count++;
+                }
+
             }
-            vAverage.add(Double.parseDouble(new DecimalFormat("##.##").format(sum / 6)));
+            if(count != 0)
+            vAverage.add(Double.parseDouble(new DecimalFormat("##.##").format(sum / count)));
         }
     }
 
@@ -73,6 +80,7 @@ public class CalculationOfVDCCRR
              System.out.println("Index = " + i);
              System.out.println("Model velocity size = " + vModel.size());
              System.out.println("Acceleration size = " + acceleration.size());
+             System.out.println("Force size = " + force.size());
              System.exit(-1);
          }
         }

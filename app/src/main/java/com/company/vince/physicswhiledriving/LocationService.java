@@ -32,7 +32,6 @@ public class LocationService extends Service implements
     public LocationRequest mLocationRequest;
     public GoogleApiClient mGoogleApiClient;
     public Location mCurrentLocation;
-    public double speed;
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationCallback mLocationCallback = new LocationCallback()
     {
@@ -119,11 +118,11 @@ public class LocationService extends Service implements
         {
             mCurrentLocation = location;
             MainActivity.speedValue = mCurrentLocation.getSpeed() * 2.2369;
-            Log.i("Current speed", "Your current speed is " + speed);
+            //Log.i("Current speed", "Your current speed is " + speed);
         } else
         {
             MainActivity.speedValue = location.getSpeed() * 2.2369;
-            Log.i("Current speed", "Your current speed is " + speed);
+            //Log.i("Current speed", "Your current speed is " + speed);
         }
     }
 

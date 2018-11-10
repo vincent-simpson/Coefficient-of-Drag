@@ -25,7 +25,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -37,9 +36,8 @@ public class MainActivity extends AppCompatActivity
     static ProgressDialog locate;
     static int p = 0;
     public boolean hasClockStarted;
-    public ArrayList<Double> timeValues = new ArrayList<>();
     public ArrayList<Double> trial1, trial2, trial3, trial4, trial5, trial6;
-    public double[] trialValuesTwoDimensions;
+    private ArrayList<ArrayList<Double>> trials = new ArrayList<>();
 
     int trialNum =1;
 
@@ -54,18 +52,9 @@ public class MainActivity extends AppCompatActivity
     ImageView image;
     Thread t;
     boolean threadInterrupted = false;
-    boolean flag = true;
+    boolean flag = false;
 
-    double[][] a = {
-            {70, 70, 70, 70, 70, 70},
-            {60, 60, 60, 60, 61, 60},
-            {55, 52, 51, 51, 52, 51},
-            {40, 44, 43, 43, 43, 44},
-            {37, 37, 38, 37, 37, 37.5},
-            {0, 32, 32, 0, 32.5, 32},
-            {0, 27, 0, 0, 27.5, 27},
-            {0, 22, 0, 0, 22.5, 0}
-    };
+    double[][] a = new double[8][6];
 
     private ServiceConnection sc = new ServiceConnection()
     {
@@ -182,7 +171,7 @@ public class MainActivity extends AppCompatActivity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         nextTrial = findViewById(R.id.iterationButton);
-        nextTrial.setVisibility(View.VISIBLE);
+        nextTrial.setVisibility(View.GONE);
 
         notifyButtonPressed = findViewById(R.id.notifyButtonPressed);
         notifyButtonPressed.setVisibility(View.GONE);
@@ -219,6 +208,8 @@ public class MainActivity extends AppCompatActivity
                         dialog.cancel();
                     }
                 });
+                AlertDialog alert = alertBuilder.create();
+                alert.show();
             }
 
         });
@@ -248,6 +239,8 @@ public class MainActivity extends AppCompatActivity
                 locate.setMessage("Getting Location...");
                 locate.show();
 
+                nextTrial.setVisibility(View.VISIBLE);
+                notifyButtonPressed.setVisibility(View.VISIBLE);
                 start.setVisibility(View.GONE);
                 pause.setVisibility(View.VISIBLE);
                 pause.setText(R.string.Pause);
@@ -355,9 +348,7 @@ public class MainActivity extends AppCompatActivity
         alert.show();
     }
 
-    /**
-     * @throws IOException
-     */
+
     public void updateUI()
     {
         speed.setSingleLine(false);
@@ -374,11 +365,11 @@ public class MainActivity extends AppCompatActivity
 
         time.setText(totalTime);
 
-        if (speedValue >= 0.0 && (speedValue < 90.0))
+        if (speedValue >= 0)
         {
             speed.setText(String.format("Current speed: %.2f mph", speedValue));
 
-            if (speedValue > 50 && !hasClockStarted)
+            if (speedValue > 30 && !hasClockStarted)
             {
                 startTimer.setVisibility(View.VISIBLE);
                 Log.i("Start timer button", "Start timer button has been displayed");
@@ -386,10 +377,6 @@ public class MainActivity extends AppCompatActivity
             {
                 startTimer.setVisibility(View.INVISIBLE);
             }
-        }
-
-        if(timeValues.size() % 8 == 0 && !timeValues.isEmpty()) {
-            nextTrial.setVisibility(View.VISIBLE);
         }
 
         startTimer.setOnClickListener(new View.OnClickListener()
@@ -421,18 +408,23 @@ public class MainActivity extends AppCompatActivity
                 case 6: trial6.add(speedValue);
             }
             Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array");
+            trials.add(trial1); trials.add(trial2); trials.add(trial3);
+            trials.add(trial4); trials.add(trial5); trials.add(trial6);
         }
+
+
 
         //Array that represents the velocity decreasing as a function of time
 
-
-        /* {6, 6, 6, 6, 6, 6},
-        {7, 7, 7, 7, 7, 7},
-        {8, 8, 8, 8, 8, 8}*/
+        for(int i=0; i < trials.size(); i++) {
+            if(!trials.get(i).isEmpty()) {
+                moveArrayListToArray(trials.get(i), i);
+                Log.i("Moving to a", "Moving arraylist to a[][]");
+            }
+        }
 
 //        for(int i=0; i < 6; i++){
 //            for(int j=0; j < 8; j++) {
-//                a[j][i] = timeValues.get(j);
 //            }
 //        }
         if(flag) runCalculations();
@@ -440,6 +432,14 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.i("Speed value: ", speedValue + "");
+    }
+
+    private void moveArrayListToArray(ArrayList<Double> aList, int column)
+    {
+        flag = true;
+        for(int row=0; row < 8; row++) {
+            a[row][column] = aList.get(row);
+        }
     }
 
     public void runCalculations() {

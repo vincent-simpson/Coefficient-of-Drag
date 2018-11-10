@@ -7,12 +7,6 @@ import java.util.ArrayList;
 //Calculation of vehicle drag coefficient and the coefficient of rolling resistance
 public class CalculationOfVDCCRR
 {
-    //Data structures to hold velocity data trials. Could be implemented in MainActivity with a
-    //switch statement
-    /*
-    switch(trial)
-    case 1: v1.add(speedValue)...ect
-     */
     static double[][] v1;
 
     private static ArrayList<Double> vAverage = new ArrayList<>();

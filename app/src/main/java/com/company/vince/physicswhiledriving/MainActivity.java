@@ -54,7 +54,18 @@ public class MainActivity extends AppCompatActivity
     ImageView image;
     Thread t;
     boolean threadInterrupted = false;
+    boolean flag = true;
 
+    double[][] a = {
+            {70, 70, 70, 70, 70, 70},
+            {60, 60, 60, 60, 61, 60},
+            {55, 52, 51, 51, 52, 51},
+            {40, 44, 43, 43, 43, 44},
+            {37, 37, 38, 37, 37, 37.5},
+            {0, 32, 32, 0, 32.5, 32},
+            {0, 27, 0, 0, 27.5, 27},
+            {0, 22, 0, 0, 22.5, 0}
+    };
 
     private ServiceConnection sc = new ServiceConnection()
     {
@@ -413,16 +424,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         //Array that represents the velocity decreasing as a function of time
-        double[][] a = {
-                {70, 70, 70, 70, 70, 70},
-                {60, 60, 60, 60, 61, 60},
-                {55, 52, 51, 51, 52, 51},
-                {40, 44, 43, 43, 43, 44},
-                {37, 37, 38, 37, 37, 37.5},
-                {32, 32, 32, 32, 32, 32},
-                {0, 22, 0, 0, 27.5, 27},
-                {0, 0, 0, 0, 0, 0}
-        };
+
 
         /* {6, 6, 6, 6, 6, 6},
         {7, 7, 7, 7, 7, 7},
@@ -433,25 +435,34 @@ public class MainActivity extends AppCompatActivity
 //                a[j][i] = timeValues.get(j);
 //            }
 //        }
-        CalculationOfVDCCRR calculation = new CalculationOfVDCCRR(a);
+        if(flag) runCalculations();
 
-        calculation.calculateAverageVelocity();
-        calculation.calculateActualVelocity();
-
-
-        calculation.calculateForce();
-        calculation.calculateAcceleration();
-        calculation.calculateModelVelocity();
-
-        //calculation.printActualVelocities();
-        calculation.printModelVelocities();
-        //calculation.printAverageVelocities();
 
 
         Log.i("Speed value: ", speedValue + "");
     }
 
-    public void moveArrayListsToTwoD() {
+    public void runCalculations() {
+        flag = false;
+        CalculationOfVDCCRR calculation = new CalculationOfVDCCRR(a);
+
+        calculation.calculateAverageVelocity();
+        calculation.calculateActualVelocity();
+
+        for(int i=0; i < 15; i++) {
+            calculation.calculateForce(i);
+            calculation.calculateAcceleration(i);
+            calculation.calculateModelVelocity(i);
+
+        }
+
+        int index=0;
+        for(int i=0; i < 8; i++) {
+            calculation.calculateErrorSquared( i, index );
+            index += 2;
+        }
+        CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);
+        
 
     }
 

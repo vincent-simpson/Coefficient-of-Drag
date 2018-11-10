@@ -462,7 +462,7 @@ public class MainActivity extends AppCompatActivity
             index += 2;
         }
         CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);
-        
+
 
     }
 

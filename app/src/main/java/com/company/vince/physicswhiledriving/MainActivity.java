@@ -28,6 +28,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
+import static com.company.vince.physicswhiledriving.R.layout.activity_main;
+
 public class MainActivity extends AppCompatActivity
 {
 
@@ -52,7 +54,7 @@ public class MainActivity extends AppCompatActivity
     ImageView image;
     Thread t;
     boolean threadInterrupted = false;
-    boolean flag = false;
+    boolean flag = true;
 
     double[][] a = new double[8][6];
 
@@ -149,24 +151,17 @@ public class MainActivity extends AppCompatActivity
                     try
                     {
                         Thread.sleep(ONE_SECOND);
-                        runOnUiThread(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                updateUI();
-                            }
-                        });
-                    } catch (Exception e)
-                    {
-                        e.printStackTrace();
-                    }
+                        runOnUiThread( () ->
+                                updateUI()
+                        );
+                    } catch (Exception e) {e.printStackTrace();}
                 }
             }
         };
         t.start();
+
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(activity_main);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -186,43 +181,31 @@ public class MainActivity extends AppCompatActivity
         startTimer = findViewById(R.id.startTimerButton);
         startTimer.setVisibility(View.GONE);
 
-        nextTrial.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        nextTrial.setOnClickListener((v) -> {
+             {
                 AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
                 alertBuilder.setMessage("Proceed to next trial?").setCancelable(true)
-                        .setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                        .setPositiveButton("Yes", (dialogInterface, i) ->
                         {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which)
                             {
                                 trialNum++;
                                 startTimer.performClick();
                             }
                         });
-                alertBuilder.setNegativeButton("No", new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        dialog.cancel();
-                    }
-                });
+                alertBuilder.setNegativeButton("No", (dialogInterface, i) ->
+                        dialogInterface.cancel());
+
                 AlertDialog alert = alertBuilder.create();
                 alert.show();
             }
 
         });
 
-        start.setOnClickListener(new View.OnClickListener()
+        start.setOnClickListener((v) ->
         {
-            @Override
-            public void onClick(View v)
-            {
                 if (!t.isAlive())
-                {
-                    t.run();
-                }
+                { t.run(); }
+
                 threadInterrupted = false;
                 Log.i("Is thread active", t.isAlive() + "");
                 locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -245,13 +228,10 @@ public class MainActivity extends AppCompatActivity
                 pause.setVisibility(View.VISIBLE);
                 pause.setText(R.string.Pause);
                 stop.setVisibility(View.VISIBLE);
-            }
         });
 
-        pause.setOnClickListener(new View.OnClickListener()
+        pause.setOnClickListener((v) ->
         {
-            @Override
-            public void onClick(View v)
             {
                 if (pause.getText().toString().equalsIgnoreCase("pause"))
                 {
@@ -273,12 +253,8 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-
-        stop.setOnClickListener(new View.OnClickListener()
+        stop.setOnClickListener((v) ->
         {
-            @Override
-            public void onClick(View v)
-            {
                 if (status)
                 {
                     threadInterrupted = true;
@@ -290,9 +266,7 @@ public class MainActivity extends AppCompatActivity
                 pause.setVisibility(View.GONE);
                 stop.setVisibility(View.GONE);
                 threadInterrupted = true;
-            }
-        });
-
+            });
     }
 
     void checkLocationPermissions()
@@ -327,27 +301,20 @@ public class MainActivity extends AppCompatActivity
         alertDialogBuilder.setMessage("Enable GPS to use application")
                 .setCancelable(false)
                 .setPositiveButton("Enable GPS",
-                        new DialogInterface.OnClickListener()
+                        (dialogInterface, i) ->
                         {
-                            public void onClick(DialogInterface dialog, int id)
-                            {
-                                Intent callGPSSettingIntent = new Intent(
-                                        android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                                startActivity(callGPSSettingIntent);
-                            }
+                            Intent callGPSSettingIntent = new Intent(
+                                    android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                            startActivity(callGPSSettingIntent);
                         });
+
         alertDialogBuilder.setNegativeButton("Cancel",
-                new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int id)
-                    {
-                        dialog.cancel();
-                    }
-                });
+                (dialogInterface, i) ->
+                        dialogInterface.cancel());
+
         AlertDialog alert = alertDialogBuilder.create();
         alert.show();
     }
-
 
     public void updateUI()
     {
@@ -379,16 +346,13 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-        startTimer.setOnClickListener(new View.OnClickListener()
+        startTimer.setOnClickListener(view ->
         {
-            @Override
-            public void onClick(View v)
-            {
                 notifyButtonPressed.setVisibility(View.VISIBLE);
                 hasClockStarted = true;
                 startTime = System.currentTimeMillis();
                 Log.i("Start time seconds: ", startTime + " start time seconds");
-            }
+
         });
 
         currentTime = System.currentTimeMillis();
@@ -423,13 +387,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
 
-//        for(int i=0; i < 6; i++){
-//            for(int j=0; j < 8; j++) {
-//            }
-//        }
         if(flag) runCalculations();
-
-
 
         Log.i("Speed value: ", speedValue + "");
     }
@@ -453,7 +411,6 @@ public class MainActivity extends AppCompatActivity
             calculation.calculateForce(i);
             calculation.calculateAcceleration(i);
             calculation.calculateModelVelocity(i);
-
         }
 
         int index=0;
@@ -461,6 +418,6 @@ public class MainActivity extends AppCompatActivity
             calculation.calculateErrorSquared( i, index );
             index += 2;
         }
-        CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);
+        //CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);
     }
 }

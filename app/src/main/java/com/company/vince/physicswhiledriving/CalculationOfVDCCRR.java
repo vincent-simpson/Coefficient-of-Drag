@@ -1,6 +1,7 @@
 package com.company.vince.physicswhiledriving;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
@@ -9,23 +10,23 @@ public class CalculationOfVDCCRR
 {
     static double[][] v1;
 
-    private static ArrayList<Double> vAverage = new ArrayList<>();
-    private static ArrayList<Double> vActual = new ArrayList<>();
-    private static ArrayList<Double> force = new ArrayList<>();
-    private static ArrayList<Double> acceleration = new ArrayList<>();
-    private static ArrayList<Double> vModel = new ArrayList<>();
-    public static ArrayList<Double> errorSquared = new ArrayList<>();
+    private static ArrayList<BigDecimal> vAverage = new ArrayList<>();
+    private static ArrayList<BigDecimal> vActual = new ArrayList<>();
+    private static ArrayList<BigDecimal> force = new ArrayList<>();
+    private static ArrayList<BigDecimal> acceleration = new ArrayList<>();
+    private static ArrayList<BigDecimal> vModel = new ArrayList<>();
+    public static ArrayList<BigDecimal> errorSquared = new ArrayList<>();
 
-    private static final double ONE_KPH = 0.2777778; // m/s
-    private static final double ONE_MPH = 0.4444444; // m/s
-    private static final double GRAV_CONST = 9.81; // m/s^2
-    private static final double DRAG_COEFFICIENT = .2346;
-    private static final double CRR = 0.016732;
-    private static double SUM_OF_ERROR_SQUARED=0;
+    private static final String ONE_KPH = "0.2777778"; // m/s
+    private static final String ONE_MPH = "0.4444444"; // m/s
+    private static final String GRAV_CONST = "9.81"; // m/s^2
+    private static final String DRAG_COEFFICIENT = ".2346";
+    private static final String CRR = "0.016732";
+    private static String SUM_OF_ERROR_SQUARED;
 
-    private double densityOfAir = 1.22; // kg/m^3
-    private double frontalAreaOfVehicle = 2.3; // m^2
-    private double massOfVehiclePlusOccupants = 1000; //kg
+    private String densityOfAir = "1.22"; // kg/m^3
+    private String frontalAreaOfVehicle = "2.3"; // m^2
+    private String massOfVehiclePlusOccupants = "1000"; //kg
 
     private BigDecimal bdGravConstant = new BigDecimal(GRAV_CONST);
     private BigDecimal bdDragCoefficient = new BigDecimal(DRAG_COEFFICIENT);
@@ -33,9 +34,9 @@ public class CalculationOfVDCCRR
     private BigDecimal bdDensityOfAir = new BigDecimal(densityOfAir);
     private BigDecimal bdMass = new BigDecimal(massOfVehiclePlusOccupants);
     private BigDecimal bdFrontalArea = new BigDecimal(frontalAreaOfVehicle);
+    private BigDecimal bdOneMph = new BigDecimal(ONE_MPH);
 
     public CalculationOfVDCCRR(double[][] a)
-
     {
         v1 = a.clone();
     }
@@ -57,29 +58,28 @@ public class CalculationOfVDCCRR
 
             }
             if(count != 0){
-                vAverage.add(Double.parseDouble(new DecimalFormat("##.##").format(sum / count)));
+                vAverage.add(new BigDecimal("" + sum / count));
             }
         }
     }
 
     public void calculateActualVelocity()
     {
-        for(double d : vAverage)
+        for(BigDecimal d : vAverage)
         {
-            vActual.add(new BigDecimal(d).multiply(new BigDecimal(ONE_MPH)).doubleValue());
+            vActual.add(d.multiply(bdOneMph));
         }
-        //printArrayListContents(vActual);
         vModel.add(vActual.get(0));
     }
 
     public void calculateModelVelocity(int row)
     {
-
-         try
+        try
          {
-             BigDecimal bd = (new BigDecimal(acceleration.get(row)).multiply(new BigDecimal(5.0)));
-             vModel.add((new BigDecimal(vModel.get(row)).subtract(bd)).doubleValue());
-             //System.out.println("Model velocity at row : " + row + " is " + vModel.get(row));
+             BigDecimal bd = (acceleration.get(row).multiply(new BigDecimal(5.0)));
+             vModel.add(vModel.get(row).subtract(bd));
+
+             //System.out.println("Model velocity at row : " + row + " is " + vModel.get(row).toPlainString());
          } catch(IndexOutOfBoundsException e) {
              System.out.println("Index = " + row);
              System.out.println("Model velocity size = " + vModel.size());
@@ -97,11 +97,11 @@ public class CalculationOfVDCCRR
         //System.out.println(vModel.get(i));
 
         BigDecimal forcePart1 = bdDragCoefficient.multiply(bdFrontalArea).multiply(new BigDecimal(0.5))
-                .multiply(bdDensityOfAir).multiply(new BigDecimal(vModel.get(row)).pow(2));
+                .multiply(bdDensityOfAir).multiply(vModel.get(row).pow(2));
         BigDecimal forcePart2 = bdCRR.multiply(bdMass).multiply(bdGravConstant);
 
 
-        force.add((forcePart1.add(forcePart2)).doubleValue());
+        force.add((forcePart1.add(forcePart2)));
         //System.out.println(force.get(row));
 
         //System.out.println("Force size = " + force.size());
@@ -111,8 +111,7 @@ public class CalculationOfVDCCRR
     {
 
         acceleration.add(
-                (new BigDecimal(force.get(row)).divide(bdMass)
-                        .doubleValue()
+                (force.get(row).divide(bdMass, RoundingMode.HALF_UP)
                 ));
         //System.out.println("Acceleration at row : " + row + " is " + acceleration.get(row));
 
@@ -120,27 +119,27 @@ public class CalculationOfVDCCRR
 
     public void calculateErrorSquared(int vActualRow, int vModelRow)
     {
-        errorSquared.add((new BigDecimal(vActual.get(vActualRow))
-                .subtract(new BigDecimal(vModel.get(vModelRow)))).pow(2).doubleValue());
-
-
+        errorSquared.add(vActual.get(vActualRow)
+                .subtract(vModel.get(vModelRow)).pow(2));
 
     }
 
     public void calculateSumOfError()
     {
-        for(double d : errorSquared)
+        BigDecimal bdErrorSum = new BigDecimal(SUM_OF_ERROR_SQUARED);
+
+        for(BigDecimal d : errorSquared)
         {
-            SUM_OF_ERROR_SQUARED += d;
+            bdErrorSum = bdErrorSum.add(d);
         }
     }
 
-    public double getDensityOfAir()
+    public String getDensityOfAir()
     {
         return densityOfAir;
     }
 
-    public void setDensityOfAir(double densityOfAir)
+    public void setDensityOfAir(String densityOfAir)
     {
         this.densityOfAir = densityOfAir;
     }
@@ -152,7 +151,7 @@ public class CalculationOfVDCCRR
         }
     }
 
-    public static void printArrayListContents(ArrayList<Double> arrayList)
+    public static void printArrayListContents(ArrayList<BigDecimal> arrayList)
     {
         for(int i =0;i < arrayList.size(); i++) {
             System.out.println(arrayList.get(i));

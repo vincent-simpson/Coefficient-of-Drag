@@ -8,7 +8,6 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -54,7 +53,7 @@ public class MainActivity extends AppCompatActivity
     ImageView image;
     Thread t;
     boolean threadInterrupted = false;
-    boolean flag = true;
+    boolean flag = false;
 
     double[][] a = new double[8][6];
 
@@ -134,6 +133,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        super.onCreate(savedInstanceState);
         System.setProperty("org.apache.poi.javax.xml.stream.XMLInputFactory", "com.fasterxml.aalto.stax.InputFactoryImpl");
         System.setProperty("org.apache.poi.javax.xml.stream.XMLOutputFactory", "com.fasterxml.aalto.stax.OutputFactoryImpl");
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity
         };
         t.start();
 
-        super.onCreate(savedInstanceState);
+
         setContentView(activity_main);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -188,6 +188,8 @@ public class MainActivity extends AppCompatActivity
                         .setPositiveButton("Yes", (dialogInterface, i) ->
                         {
                             {
+                                Log.i("Testing", trial1.get(0) + " trial 1 at 0");
+                                Log.i("Testing", trial1.get(1) + " trial 1 at 1");
                                 trialNum++;
                                 startTimer.performClick();
                             }

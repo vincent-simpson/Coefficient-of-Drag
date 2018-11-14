@@ -2,7 +2,6 @@ package com.company.vince.physicswhiledriving;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 //Calculation of vehicle drag coefficient and the coefficient of rolling resistance
@@ -88,12 +87,10 @@ public class CalculationOfVDCCRR
              e.printStackTrace();
              System.exit(-1);
          }
-
     }
 
     public void calculateForce(int row)
     {
-
         //System.out.println(vModel.get(i));
 
         BigDecimal forcePart1 = bdDragCoefficient.multiply(bdFrontalArea).multiply(new BigDecimal(0.5))
@@ -109,12 +106,10 @@ public class CalculationOfVDCCRR
 
     public void calculateAcceleration(int row)
     {
-
         acceleration.add(
                 (force.get(row).divide(bdMass, RoundingMode.HALF_UP)
                 ));
         //System.out.println("Acceleration at row : " + row + " is " + acceleration.get(row));
-
     }
 
     public void calculateErrorSquared(int vActualRow, int vModelRow)

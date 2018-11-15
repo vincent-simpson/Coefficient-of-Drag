@@ -37,7 +37,12 @@ public class MainActivity extends AppCompatActivity
     static ProgressDialog locate;
     static int p = 0;
     public boolean hasClockStarted;
-    public ArrayList<Double> trial1, trial2, trial3, trial4, trial5, trial6;
+    public ArrayList<Double> trial1 = new ArrayList<>();
+    public ArrayList<Double> trial2 = new ArrayList<>();
+    public ArrayList<Double> trial3 = new ArrayList<>();
+    public ArrayList<Double> trial4 = new ArrayList<>();
+    public ArrayList<Double> trial5 = new ArrayList<>();
+    public ArrayList<Double> trial6 = new ArrayList<>();
     private ArrayList<ArrayList<Double>> trials = new ArrayList<>();
 
     int trialNum =1;
@@ -54,6 +59,7 @@ public class MainActivity extends AppCompatActivity
     Thread t;
     boolean threadInterrupted = false;
     boolean flag = false;
+    boolean trialAdded = false;
 
     double[][] a = new double[8][6];
 
@@ -338,7 +344,7 @@ public class MainActivity extends AppCompatActivity
         {
             speed.setText(String.format("Current speed: %.2f mph", speedValue));
 
-            if (speedValue > 30 && !hasClockStarted)
+            if (speedValue >= 0 && !hasClockStarted)
             {
                 startTimer.setVisibility(View.VISIBLE);
                 Log.i("Start timer button", "Start timer button has been displayed");
@@ -382,14 +388,18 @@ public class MainActivity extends AppCompatActivity
 
         //Array that represents the velocity decreasing as a function of time
 
-        for(int i=0; i < trials.size(); i++) {
-            if(!trials.get(i).isEmpty()) {
-                moveArrayListToArray(trials.get(i), i);
-                Log.i("Moving to a", "Moving arraylist to a[][]");
-            }
-        }
+        if(trial1.size() == 8) {
+            for(int i=0; i < trialNum; i++) {
+                if(!trials.get(i).isEmpty()) {
+                    System.out.println("i : " + i);
 
-        if(flag) runCalculations();
+                    moveArrayListToArray(trials.get(i), i);
+                    Log.i("Moving to a", "Moving arraylist to a[][]");
+                }
+            }
+
+            if(flag) runCalculations();
+        }
 
         Log.i("Speed value: ", speedValue + "");
     }

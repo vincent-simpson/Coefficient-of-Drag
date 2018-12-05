@@ -45,8 +45,7 @@ public class CalculationOfVDCCRR
         double sum;
         int count;
 
-        for(int i=0; i < 8; i++)
-        {
+        for(int i=0; i < 8; i++) {
             sum=0;
             count=0;
             for(int j=0; j < 6; j++) {
@@ -54,7 +53,6 @@ public class CalculationOfVDCCRR
                     sum += v1[i][j];
                     count++;
                 }
-
             }
             if(count != 0){
                 vAverage.add(new BigDecimal("" + sum / count));

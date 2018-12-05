@@ -76,6 +76,7 @@
         android:background="@android:color/black"
         android:text="@string/Pause"
         android:textAppearance="@android:style/TextAppearance.Holo.Widget.Button"
+        android:textColor="@color/common_google_signin_btn_text_dark_default"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

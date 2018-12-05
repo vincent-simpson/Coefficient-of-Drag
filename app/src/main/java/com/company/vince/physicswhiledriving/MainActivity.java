@@ -25,12 +25,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import static com.company.vince.physicswhiledriving.R.layout.activity_main;
 
-public class MainActivity extends AppCompatActivity
-{
+public class MainActivity extends AppCompatActivity {
 
     private static final int ONE_SECOND = 1000;
     public static double speedValue;
@@ -43,45 +43,36 @@ public class MainActivity extends AppCompatActivity
     public ArrayList<Double> trial4 = new ArrayList<>();
     public ArrayList<Double> trial5 = new ArrayList<>();
     public ArrayList<Double> trial6 = new ArrayList<>();
-    private ArrayList<ArrayList<Double>> trials = new ArrayList<>();
-
-    int trialNum =1;
-
+    int trialNum = 1;
     TextView time, speed, notifyButtonPressed;
     Button start, pause, stop;
     Button startTimer, nextTrial;
-
     long startTime, endTime, currentTime, timeElapsed;
     LocationService myService;
-    boolean status;
     LocationManager locationManager;
     ImageView image;
     Thread t;
+    boolean status;
     boolean threadInterrupted = false;
     boolean flag = false;
-    boolean trialAdded = false;
-
     double[][] a = new double[8][6];
+    private ArrayList<ArrayList<Double>> trials = new ArrayList<>();
 
-    private ServiceConnection sc = new ServiceConnection()
-    {
+    private ServiceConnection sc = new ServiceConnection() {
         @Override
-        public void onServiceConnected(ComponentName name, IBinder service)
-        {
+        public void onServiceConnected(ComponentName name, IBinder service) {
             LocationService.LocalBinder binder = (LocationService.LocalBinder) service;
             myService = binder.getService();
             status = true;
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName name)
-        {
+        public void onServiceDisconnected(ComponentName name) {
             status = false;
         }
     };
 
-    void bindService()
-    {
+    void bindService() {
         if (status)
             return;
         Intent i = new Intent(getApplicationContext(), LocationService.class);
@@ -90,8 +81,7 @@ public class MainActivity extends AppCompatActivity
         startTime = System.currentTimeMillis();
     }
 
-    void unbindService()
-    {
+    void unbindService() {
         if (!status)
             return;
         unbindService(sc);
@@ -99,36 +89,30 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
     }
 
     @Override
-    protected void onStart()
-    {
+    protected void onStart() {
         super.onStart();
     }
 
     @Override
-    protected void onStop()
-    {
+    protected void onStop() {
         super.onStop();
-        if (status)
-        {
+        if (status) {
             unbindService();
         }
     }
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         super.onDestroy();
     }
 
     @Override
-    public void onBackPressed()
-    {
+    public void onBackPressed() {
         if (!status)
             super.onBackPressed();
         else
@@ -137,35 +121,30 @@ public class MainActivity extends AppCompatActivity
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         System.setProperty("org.apache.poi.javax.xml.stream.XMLInputFactory", "com.fasterxml.aalto.stax.InputFactoryImpl");
         System.setProperty("org.apache.poi.javax.xml.stream.XMLOutputFactory", "com.fasterxml.aalto.stax.OutputFactoryImpl");
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
 
         checkLocationPermissions();
-        checkWriteToStoragePermissions();
 
-        t = new Thread()
-        {
+        t = new Thread() {
             @Override
-            public void run()
-            {
-                while (!threadInterrupted)
-                {
-                    try
-                    {
+            public void run() {
+                while (!threadInterrupted) {
+                    try {
                         Thread.sleep(ONE_SECOND);
-                        runOnUiThread( () ->
+                        runOnUiThread(() ->
                                 updateUI()
                         );
-                    } catch (Exception e) {e.printStackTrace();}
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
         t.start();
-
 
         setContentView(activity_main);
 
@@ -188,14 +167,14 @@ public class MainActivity extends AppCompatActivity
         startTimer.setVisibility(View.GONE);
 
         nextTrial.setOnClickListener((v) -> {
-             {
+            {
                 AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
                 alertBuilder.setMessage("Proceed to next trial?").setCancelable(true)
                         .setPositiveButton("Yes", (dialogInterface, i) ->
                         {
                             {
-                                Log.i("Testing", trial1.get(0) + " trial 1 at 0");
-                                Log.i("Testing", trial1.get(1) + " trial 1 at 1");
+                                //Log.i("Testing", trial1.get(0) + " trial 1 at 0");
+                               // Log.i("Testing", trial1.get(1) + " trial 1 at 1");
                                 trialNum++;
                                 startTimer.performClick();
                             }
@@ -206,52 +185,48 @@ public class MainActivity extends AppCompatActivity
                 AlertDialog alert = alertBuilder.create();
                 alert.show();
             }
-
         });
 
         start.setOnClickListener((v) ->
         {
-                if (!t.isAlive())
-                { t.run(); }
+            if (!t.isAlive()) {
+                t.run();
+            }
 
-                threadInterrupted = false;
-                Log.i("Is thread active", t.isAlive() + "");
-                locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-                checkGps();
-                if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                    return;
+            threadInterrupted = false;
+            Log.i("Is thread active", t.isAlive() + "");
+            locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            checkGps();
+            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
+                return;
 
-                if (!status)
-                    bindService();
+            if (!status)
+                bindService();
 
-                locate = new ProgressDialog(MainActivity.this);
-                locate.setIndeterminate(true);
-                locate.setCancelable(false);
-                locate.setMessage("Getting Location...");
-                locate.show();
+            locate = new ProgressDialog(MainActivity.this);
+            locate.setIndeterminate(true);
+            locate.setCancelable(false);
+            locate.setMessage("Getting Location...");
+            locate.show();
 
-                nextTrial.setVisibility(View.VISIBLE);
-                notifyButtonPressed.setVisibility(View.VISIBLE);
-                start.setVisibility(View.GONE);
-                pause.setVisibility(View.VISIBLE);
-                pause.setText(R.string.Pause);
-                stop.setVisibility(View.VISIBLE);
+            notifyButtonPressed.setVisibility(View.VISIBLE);
+            start.setVisibility(View.GONE);
+            pause.setVisibility(View.VISIBLE);
+            pause.setText(R.string.Pause);
+            stop.setVisibility(View.VISIBLE);
         });
 
         pause.setOnClickListener((v) ->
         {
             {
-                if (pause.getText().toString().equalsIgnoreCase("pause"))
-                {
+                if (pause.getText().toString().equalsIgnoreCase("pause")) {
                     threadInterrupted = true;
                     pause.setText(R.string.Resume);
 
-                } else if (pause.getText().toString().equalsIgnoreCase("Resume"))
-                {
+                } else if (pause.getText().toString().equalsIgnoreCase("Resume")) {
                     checkGps();
                     locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-                    if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-                    {
+                    if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                         //Toast.makeText(this, "GPS is Enabled in your device", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -263,48 +238,34 @@ public class MainActivity extends AppCompatActivity
 
         stop.setOnClickListener((v) ->
         {
-                if (status)
-                {
-                    threadInterrupted = true;
-                    onStop();
-                    Log.i("Stop button pressed", "unbound");
-                }
-                start.setVisibility(View.VISIBLE);
-                pause.setText(R.string.Pause);
-                pause.setVisibility(View.GONE);
-                stop.setVisibility(View.GONE);
+            if (status) {
                 threadInterrupted = true;
-            });
+                onStop();
+                Log.i("Stop button pressed", "unbound");
+            }
+            start.setVisibility(View.VISIBLE);
+            pause.setText(R.string.Pause);
+            pause.setVisibility(View.GONE);
+            stop.setVisibility(View.GONE);
+            threadInterrupted = true;
+        });
     }
 
-    void checkLocationPermissions()
-    {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-        {
+    void checkLocationPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 4);
         }
     }
 
-    void checkWriteToStoragePermissions()
-    {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 3);
-        }
-    }
-
-    void checkGps()
-    {
+    void checkGps() {
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-        {
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             showGPSDisabledAlertToUser();
         }
     }
 
-    private void showGPSDisabledAlertToUser()
-    {
+    private void showGPSDisabledAlertToUser() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage("Enable GPS to use application")
                 .setCancelable(false)
@@ -324,14 +285,16 @@ public class MainActivity extends AppCompatActivity
         alert.show();
     }
 
-    public void updateUI()
-    {
+    public void updateUI() {
+
+        if(trials.size() < 8) nextTrial.setVisibility(View.VISIBLE);
+        else nextTrial.setVisibility(View.INVISIBLE);
+
         speed.setSingleLine(false);
         time.setSingleLine(false);
 
         endTime = System.currentTimeMillis();
         long diff = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-
 
         if (diff > 1000000)
             diff = 0;
@@ -340,27 +303,24 @@ public class MainActivity extends AppCompatActivity
 
         time.setText(totalTime);
 
-        if (speedValue >= 0)
-        {
-            speed.setText(String.format("Current speed: %.2f mph", speedValue));
+        if (speedValue >= 0) {
+            String speedText = String.format(Locale.ENGLISH, "Current speed: %.2f mph", speedValue);
+            speed.setText(speedText);
 
-            if (speedValue >= 0 && !hasClockStarted)
-            {
+            if (speedValue >= 0 && !hasClockStarted) {
                 startTimer.setVisibility(View.VISIBLE);
                 Log.i("Start timer button", "Start timer button has been displayed");
-            } else
-            {
+            } else {
                 startTimer.setVisibility(View.INVISIBLE);
             }
         }
 
         startTimer.setOnClickListener(view ->
         {
-                notifyButtonPressed.setVisibility(View.VISIBLE);
-                hasClockStarted = true;
-                startTime = System.currentTimeMillis();
-                Log.i("Start time seconds: ", startTime + " start time seconds");
-
+            notifyButtonPressed.setVisibility(View.VISIBLE);
+            hasClockStarted = true;
+            startTime = System.currentTimeMillis();
+            Log.i("Start time seconds: ", startTime + " start time seconds");
         });
 
         currentTime = System.currentTimeMillis();
@@ -369,65 +329,92 @@ public class MainActivity extends AppCompatActivity
         Log.i("Current time seconds: ", currentTime + " current time seconds");
         Log.i("Subtraction ", "Difference: " + timeElapsed);
 
-        if (((timeElapsed % 10) == 0) && (timeElapsed != 0) && hasClockStarted)
-        {
-            switch(trialNum) {
-                case 1: trial1.add(speedValue);
-                case 2: trial2.add(speedValue);
-                case 3: trial3.add(speedValue);
-                case 4: trial4.add(speedValue);
-                case 5: trial5.add(speedValue);
-                case 6: trial6.add(speedValue);
+        if (((timeElapsed % 10) == 0) && (timeElapsed != 0) && hasClockStarted) {
+            switch (trialNum) {
+                case 1:
+                    trial1.add(speedValue);
+                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial1");
+                    break;
+                case 2:
+                    trial2.add(speedValue);
+                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial2");
+                    break;
+                case 3:
+                    trial3.add(speedValue);
+                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial3");
+                    break;
+                case 4:
+                    trial4.add(speedValue);
+                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial4");
+                    break;
+                case 5:
+                    trial5.add(speedValue);
+                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial5");
+                    break;
+                case 6:
+                    trial6.add(speedValue);
+                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial6");
+                    break;
             }
-            Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array");
-            trials.add(trial1); trials.add(trial2); trials.add(trial3);
-            trials.add(trial4); trials.add(trial5); trials.add(trial6);
         }
 
-
+        if(trialNum == 6) {
+            trials.add(trial1);
+            trials.add(trial2);
+            trials.add(trial3);
+            trials.add(trial4);
+            trials.add(trial5);
+            trials.add(trial6);
+        }
 
         //Array that represents the velocity decreasing as a function of time
 
-        if(trial1.size() == 8) {
-            for(int i=0; i < trialNum; i++) {
-                if(!trials.get(i).isEmpty()) {
+        if (trials.size() == 6) {
+            for (int i = 0; i < 6; i++) {
+                if (!trials.get(i).isEmpty()) {
                     System.out.println("i : " + i);
 
-                    moveArrayListToArray(trials.get(i), i);
+                    moveArrayListToArray(i);
                     Log.i("Moving to a", "Moving arraylist to a[][]");
                 }
             }
-
-            if(flag) runCalculations();
+            if (flag) runCalculations();
         }
-
         Log.i("Speed value: ", speedValue + "");
     }
 
-    private void moveArrayListToArray(ArrayList<Double> aList, int column)
-    {
+    private void moveArrayListToArray(int column) {
         flag = true;
-        for(int row=0; row < 8; row++) {
-            a[row][column] = aList.get(row);
+        int rowtemp=0;
+        try {
+            for (int row = 0; row < trials.get(row).size(); row++) {
+                a[row][column] = trials.get(row);
+                rowtemp = row;
+            }
+        } catch(IndexOutOfBoundsException e) {
+            System.out.println("row is: " + rowtemp);
+            e.printStackTrace();
         }
+
     }
 
     public void runCalculations() {
+        Log.i("Running calculations", "runCalculations() called");
         flag = false;
         CalculationOfVDCCRR calculation = new CalculationOfVDCCRR(a);
 
         calculation.calculateAverageVelocity();
         calculation.calculateActualVelocity();
 
-        for(int i=0; i < 15; i++) {
+        for (int i = 0; i < 15; i++) {
             calculation.calculateForce(i);
             calculation.calculateAcceleration(i);
             calculation.calculateModelVelocity(i);
         }
 
-        int index=0;
-        for(int i=0; i < 8; i++) {
-            calculation.calculateErrorSquared( i, index );
+        int index = 0;
+        for (int i = 0; i < 8; i++) {
+            calculation.calculateErrorSquared(i, index);
             index += 2;
         }
         //CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);

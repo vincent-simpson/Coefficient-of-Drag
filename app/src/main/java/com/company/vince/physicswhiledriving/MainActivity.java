@@ -387,15 +387,16 @@ public class MainActivity extends AppCompatActivity {
         flag = true;
         int rowtemp=0;
         try {
-            for (int row = 0; row < trials.get(row).size(); row++) {
-                a[row][column] = trials.get(row);
+            for (int row = 0; row < trials.size(); row++) {
+                for(int j = 0; j < trials.get(row).size(); j++) {
+                    a[row][column] = trials.get(row).get(j);
+                }
                 rowtemp = row;
             }
         } catch(IndexOutOfBoundsException e) {
             System.out.println("row is: " + rowtemp);
             e.printStackTrace();
         }
-
     }
 
     public void runCalculations() {

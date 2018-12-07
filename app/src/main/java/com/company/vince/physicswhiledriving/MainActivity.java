@@ -13,6 +13,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -128,23 +129,16 @@ public class MainActivity extends AppCompatActivity {
         System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
 
         checkLocationPermissions();
-
-        t = new Thread() {
-            @Override
-            public void run() {
-                while (!threadInterrupted) {
-                    try {
-                        Thread.sleep(ONE_SECOND);
-                        runOnUiThread(() ->
-                                updateUI()
-                        );
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        t.start();
+        final Handler handler = new Handler();
+        final Runnable task = new Runnable() {
+           @Override
+           public void run() {
+               updateUI();
+               if(!threadInterrupted) {
+                   handler.postDelayed(this, 1000);
+               }
+           }
+       };
 
         setContentView(activity_main);
 
@@ -163,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
         stop = findViewById(R.id.stop);
 
         image = findViewById(R.id.image);
-        startTimer = findViewById(R.id.startTimerButton);
+        startTimer = findViewById(R.id.beginButton);
         startTimer.setVisibility(View.GONE);
 
         nextTrial.setOnClickListener((v) -> {
@@ -189,12 +183,8 @@ public class MainActivity extends AppCompatActivity {
 
         start.setOnClickListener((v) ->
         {
-            if (!t.isAlive()) {
-                t.run();
-            }
-
+            handler.postDelayed(task, 200);
             threadInterrupted = false;
-            Log.i("Is thread active", t.isAlive() + "");
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             checkGps();
             if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
@@ -227,7 +217,6 @@ public class MainActivity extends AppCompatActivity {
                     checkGps();
                     locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
                     if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                        //Toast.makeText(this, "GPS is Enabled in your device", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     threadInterrupted = false;
@@ -243,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 onStop();
                 Log.i("Stop button pressed", "unbound");
             }
+            startTimer.setVisibility(View.VISIBLE);
             start.setVisibility(View.VISIBLE);
             pause.setText(R.string.Pause);
             pause.setVisibility(View.GONE);
@@ -367,8 +357,6 @@ public class MainActivity extends AppCompatActivity {
             trials.add(trial6);
         }
 
-        //Array that represents the velocity decreasing as a function of time
-
         if (trials.size() == 6) {
             for (int i = 0; i < 6; i++) {
                 if (!trials.get(i).isEmpty()) {
@@ -414,8 +402,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         int index = 0;
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < trials.get(i).size(); i++) {
             calculation.calculateErrorSquared(i, index);
+
             index += 2;
         }
         //CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);

@@ -19,25 +19,29 @@ public class CalculationOfVDCCRR
     private static final String ONE_KPH = "0.2777778"; // m/s
     private static final String ONE_MPH = "0.4444444"; // m/s
     private static final String GRAV_CONST = "9.81"; // m/s^2
-    private static final String DRAG_COEFFICIENT = ".2346";
+    public static String DRAG_COEFFICIENT = ".2346";
     private static final String CRR = "0.016732";
-    private static String SUM_OF_ERROR_SQUARED;
 
     private String densityOfAir = "1.22"; // kg/m^3
     private String frontalAreaOfVehicle = "2.3"; // m^2
     private String massOfVehiclePlusOccupants = "1000"; //kg
 
     private BigDecimal bdGravConstant = new BigDecimal(GRAV_CONST);
-    private BigDecimal bdDragCoefficient = new BigDecimal(DRAG_COEFFICIENT);
+    public static BigDecimal bdDragCoefficient = new BigDecimal(DRAG_COEFFICIENT);
     private BigDecimal bdCRR = new BigDecimal(CRR);
     private BigDecimal bdDensityOfAir = new BigDecimal(densityOfAir);
     private BigDecimal bdMass = new BigDecimal(massOfVehiclePlusOccupants);
     private BigDecimal bdFrontalArea = new BigDecimal(frontalAreaOfVehicle);
     private BigDecimal bdOneMph = new BigDecimal(ONE_MPH);
+    private BigDecimal bdErrorSum;
 
     public CalculationOfVDCCRR(double[][] a)
     {
         v1 = a.clone();
+    }
+
+    public void setDragCoefficient(BigDecimal d) {
+        bdDragCoefficient = d;
     }
 
     public void calculateAverageVelocity()
@@ -112,20 +116,34 @@ public class CalculationOfVDCCRR
 
     public void calculateErrorSquared(int vActualRow, int vModelRow)
     {
-        errorSquared.add(vActual.get(vActualRow)
-                .subtract(vModel.get(vModelRow)).pow(2));
+        try {
+            errorSquared.add(vActual.get(vActualRow)
+                    .subtract(vModel.get(vModelRow)).pow(2));
+        } catch(IndexOutOfBoundsException e) {
+            e.printStackTrace();
+            System.out.println("vActualRow: " + vActualRow + "\n" + "vModelRow: " + vModelRow);
+        }
 
     }
 
     public void calculateSumOfError()
     {
-        BigDecimal bdErrorSum = new BigDecimal(SUM_OF_ERROR_SQUARED);
+       bdErrorSum = new BigDecimal("0.0");
 
         for(BigDecimal d : errorSquared)
         {
             bdErrorSum = bdErrorSum.add(d);
         }
+
     }
+
+    public BigDecimal getSumOfError() {
+        return bdErrorSum;
+    }
+
+    public BigDecimal getDragCoefficient () {
+        return bdDragCoefficient;
+}
 
     public String getDensityOfAir()
     {
@@ -150,6 +168,23 @@ public class CalculationOfVDCCRR
             System.out.println(arrayList.get(i));
         }
     }
+
+    public void clearAllValues() {
+        force.clear();
+        acceleration.clear();
+        vModel.clear();
+        errorSquared.clear();
+    }
+
+    public void printAllSizes() {
+        System.out.println("vAverage size: " + vAverage.size());
+        System.out.println("vActual size: " + vActual.size());
+        System.out.println("Force size: " + force.size());
+        System.out.println("Acceleration size: " + acceleration.size());
+        System.out.println("vModel size: " + vModel.size());
+        System.out.println("ErrorSquared size: " + errorSquared.size());
+    }
+
 
 
 

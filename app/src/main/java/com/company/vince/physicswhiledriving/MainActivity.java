@@ -23,8 +23,10 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +35,7 @@ import static com.company.vince.physicswhiledriving.R.layout.activity_main;
 
 public class MainActivity extends AppCompatActivity {
 
+    private final int INTERVAL = 5;
     private static final int ONE_SECOND = 1000;
     public static double speedValue;
     static ProgressDialog locate;
@@ -58,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
     boolean flag = false;
     double[][] a = new double[8][6];
     private ArrayList<ArrayList<Double>> trials = new ArrayList<>();
+    CalculationOfVDCCRR calculation;
+    static CalculationOfVDCCRR calculation2;
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -200,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
             locate.show();
 
             notifyButtonPressed.setVisibility(View.VISIBLE);
+            startTimer.setVisibility(View.VISIBLE);
             start.setVisibility(View.GONE);
             pause.setVisibility(View.VISIBLE);
             pause.setText(R.string.Pause);
@@ -232,12 +238,12 @@ public class MainActivity extends AppCompatActivity {
                 onStop();
                 Log.i("Stop button pressed", "unbound");
             }
-            startTimer.setVisibility(View.VISIBLE);
             start.setVisibility(View.VISIBLE);
             pause.setText(R.string.Pause);
             pause.setVisibility(View.GONE);
             stop.setVisibility(View.GONE);
             threadInterrupted = true;
+            hasClockStarted = false;
         });
     }
 
@@ -286,8 +292,8 @@ public class MainActivity extends AppCompatActivity {
         endTime = System.currentTimeMillis();
         long diff = TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
 
-        if (diff > 1000000)
-            diff = 0;
+//        if (diff > 1000000)
+//            diff = 0;
 
         String totalTime = "Total time: " + diff + " minutes";
 
@@ -319,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
         Log.i("Current time seconds: ", currentTime + " current time seconds");
         Log.i("Subtraction ", "Difference: " + timeElapsed);
 
-        if (((timeElapsed % 10) == 0) && (timeElapsed != 0) && hasClockStarted) {
+        if (((timeElapsed % INTERVAL) == 0) && (timeElapsed != 0) && hasClockStarted) {
             switch (trialNum) {
                 case 1:
                     trial1.add(speedValue);
@@ -366,7 +372,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.i("Moving to a", "Moving arraylist to a[][]");
                 }
             }
-            if (flag) runCalculations();
+            if (flag) {
+                runCalculations();
+                calculateCoefficientOfDrag();
+            }
         }
         Log.i("Speed value: ", speedValue + "");
     }
@@ -390,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
     public void runCalculations() {
         Log.i("Running calculations", "runCalculations() called");
         flag = false;
-        CalculationOfVDCCRR calculation = new CalculationOfVDCCRR(a);
+        calculation = new CalculationOfVDCCRR(a);
 
         calculation.calculateAverageVelocity();
         calculation.calculateActualVelocity();
@@ -404,9 +413,45 @@ public class MainActivity extends AppCompatActivity {
         int index = 0;
         for (int i = 0; i < trials.get(i).size(); i++) {
             calculation.calculateErrorSquared(i, index);
-
             index += 2;
         }
-        //CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);
+        calculation.calculateSumOfError();
+        CalculationOfVDCCRR.printArrayListContents(CalculationOfVDCCRR.errorSquared);
+        System.out.println("Sum of error: " + calculation.getSumOfError().toPlainString());
     }
+
+    private void calculateCoefficientOfDrag() {
+//        ProgressBar progressBar = findViewById(R.id.indeterminateBar);
+//        progressBar.setIndeterminate(true);
+//        progressBar.setVisibility(View.VISIBLE);
+
+        System.out.println("Calculate coefficient of drag called.");
+        BigDecimal DragCoefficient = new BigDecimal(CalculationOfVDCCRR.DRAG_COEFFICIENT);
+        calculation.clearAllValues();
+
+        while(calculation.getSumOfError().doubleValue() > 0.9) {
+            System.out.println(calculation.getSumOfError().doubleValue());
+            DragCoefficient = DragCoefficient.subtract(new BigDecimal(0.001));
+            calculation.setDragCoefficient(DragCoefficient);
+            System.out.println("Current drag coef: " +calculation.getDragCoefficient().doubleValue());
+
+            calculation.calculateAverageVelocity();
+            calculation.calculateActualVelocity();
+            for (int i = 0; i < 15; i++) {
+                calculation.calculateForce(i);
+                calculation.calculateAcceleration(i);
+                calculation.calculateModelVelocity(i);
+            }
+            int index = 0;
+            for (int i = 0; i < trials.get(i).size(); i++) {
+                calculation.calculateErrorSquared(i, index);
+                index += 2;
+            }
+            calculation.calculateSumOfError();
+            calculation.printAllSizes();
+            calculation.clearAllValues();
+            notifyButtonPressed.setText("Drag Co: " + calculation.getDragCoefficient());
+        }
+    }
+
 }

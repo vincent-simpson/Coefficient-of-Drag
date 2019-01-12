@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -23,7 +24,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.math.BigDecimal;
@@ -58,11 +58,21 @@ public class MainActivity extends AppCompatActivity {
     Thread t;
     boolean status;
     boolean threadInterrupted = false;
-    boolean flag = false;
-    double[][] a = new double[8][6];
+    boolean flag = true;
+    double[][] a = {
+            {70, 70, 70, 70, 70, 70},
+            {61, 60, 60, 60, 61, 60},
+            {52, 52, 51, 51, 52, 51},
+            {44, 44, 43, 43, 43, 44},
+            {37, 37, 38, 37, 37, 37.5},
+            {0, 32, 32, 25, 32.5, 32},
+            {0, 27, 25, 20, 27.5, 27},
+            {0, 22, 20, 18, 22.5, 0}
+    };
+
+      //      new double[8][6];
     private ArrayList<ArrayList<Double>> trials = new ArrayList<>();
     CalculationOfVDCCRR calculation;
-    static CalculationOfVDCCRR calculation2;
 
     private ServiceConnection sc = new ServiceConnection() {
         @Override
@@ -129,9 +139,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.setProperty("org.apache.poi.javax.xml.stream.XMLInputFactory", "com.fasterxml.aalto.stax.InputFactoryImpl");
-        System.setProperty("org.apache.poi.javax.xml.stream.XMLOutputFactory", "com.fasterxml.aalto.stax.OutputFactoryImpl");
-        System.setProperty("org.apache.poi.javax.xml.stream.XMLEventFactory", "com.fasterxml.aalto.stax.EventFactoryImpl");
 
         checkLocationPermissions();
         final Handler handler = new Handler();
@@ -314,8 +321,9 @@ public class MainActivity extends AppCompatActivity {
         startTimer.setOnClickListener(view ->
         {
             notifyButtonPressed.setVisibility(View.VISIBLE);
-            hasClockStarted = true;
+            //hasClockStarted = true;
             startTime = System.currentTimeMillis();
+            startTimer.setVisibility(View.INVISIBLE);
             Log.i("Start time seconds: ", startTime + " start time seconds");
         });
 
@@ -373,8 +381,11 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (flag) {
-                runCalculations();
-                calculateCoefficientOfDrag();
+                Runnable r = () -> {
+                    runCalculations();
+                    calculateCoefficientOfDrag();
+            };
+                AsyncTask.execute(r);
             }
         }
         Log.i("Speed value: ", speedValue + "");
@@ -398,6 +409,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void runCalculations() {
         Log.i("Running calculations", "runCalculations() called");
+
         flag = false;
         calculation = new CalculationOfVDCCRR(a);
 
@@ -453,5 +465,4 @@ public class MainActivity extends AppCompatActivity {
             notifyButtonPressed.setText("Drag Co: " + calculation.getDragCoefficient());
         }
     }
-
 }

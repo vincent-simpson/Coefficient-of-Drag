@@ -44,17 +44,20 @@ public class CalculationOfVDCCRR
         bdDragCoefficient = d;
     }
 
+    /**
+     *
+     */
     public void calculateAverageVelocity()
     {
         double sum;
         int count;
 
-        for(int i=0; i < 8; i++) {
+        for(int row=0; row < 8; row++) {
             sum=0;
             count=0;
-            for(int j=0; j < 6; j++) {
-                if(v1[i][j] != 0.0){
-                    sum += v1[i][j];
+            for(int trialNum=0; trialNum < 6; trialNum++) {
+                if(v1[row][trialNum] != 0.0){
+                    sum += v1[row][trialNum];
                     count++;
                 }
             }
@@ -184,8 +187,4 @@ public class CalculationOfVDCCRR
         System.out.println("vModel size: " + vModel.size());
         System.out.println("ErrorSquared size: " + errorSquared.size());
     }
-
-
-
-
 }

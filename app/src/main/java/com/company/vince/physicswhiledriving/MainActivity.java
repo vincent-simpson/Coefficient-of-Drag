@@ -361,7 +361,6 @@ public class MainActivity extends AppCompatActivity {
                     break;
             }
         }
-
         if(trialNum == 6) {
             trials.add(trial1);
             trials.add(trial2);

@@ -345,19 +345,23 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 case 3:
                     trial3.add(speedValue);
-                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial3");
+                    Log.i("Adding speed to array", "Current speed of " + speedValue +
+                            " mph was added to the array: trial3");
                     break;
                 case 4:
                     trial4.add(speedValue);
-                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial4");
+                    Log.i("Adding speed to array", "Current speed of " + speedValue +
+                            " mph was added to the array: trial4");
                     break;
                 case 5:
                     trial5.add(speedValue);
-                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial5");
+                    Log.i("Adding speed to array", "Current speed of " + speedValue +
+                            " mph was added to the array: trial5");
                     break;
                 case 6:
                     trial6.add(speedValue);
-                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial6");
+                    Log.i("Adding speed to array", "Current speed of " + speedValue +
+                            " mph was added to the array: trial6");
                     break;
             }
         }
@@ -442,7 +446,7 @@ public class MainActivity extends AppCompatActivity {
 
         while(calculation.getSumOfError().doubleValue() > 0.9) {
             System.out.println(calculation.getSumOfError().doubleValue());
-            DragCoefficient = DragCoefficient.subtract(new BigDecimal(0.001));
+            DragCoefficient = DragCoefficient.subtract(new BigDecimal("0.001"));
             calculation.setDragCoefficient(DragCoefficient);
             System.out.println("Current drag coef: " +calculation.getDragCoefficient().doubleValue());
 

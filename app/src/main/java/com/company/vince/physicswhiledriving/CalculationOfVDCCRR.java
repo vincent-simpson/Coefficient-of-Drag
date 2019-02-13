@@ -80,7 +80,7 @@ public class CalculationOfVDCCRR
     {
         try
          {
-             BigDecimal bd = (acceleration.get(row).multiply(new BigDecimal(5.0)));
+             BigDecimal bd = (acceleration.get(row).multiply(new BigDecimal("5.0")));
              vModel.add(vModel.get(row).subtract(bd));
 
              //System.out.println("Model velocity at row : " + row + " is " + vModel.get(row).toPlainString());
@@ -98,7 +98,7 @@ public class CalculationOfVDCCRR
     {
         //System.out.println(vModel.get(i));
 
-        BigDecimal forcePart1 = bdDragCoefficient.multiply(bdFrontalArea).multiply(new BigDecimal(0.5))
+        BigDecimal forcePart1 = bdDragCoefficient.multiply(bdFrontalArea).multiply(new BigDecimal("0.5"))
                 .multiply(bdDensityOfAir).multiply(vModel.get(row).pow(2));
         BigDecimal forcePart2 = bdCRR.multiply(bdMass).multiply(bdGravConstant);
 

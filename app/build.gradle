@@ -51,7 +51,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test:rules:1.0.2'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    //implementation files('src/poishadow-all.jar')
     //    implementation 'com.android.support:multidex:1.0.3'
     //    implementation 'org.choco-solver:choco:3.3.3-j7'
     //    implementation 'org.choco-solver:choco-solver:4.0.9'

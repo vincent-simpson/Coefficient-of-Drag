@@ -466,6 +466,7 @@ public class MainActivity extends AppCompatActivity {
             calculation.printAllSizes();
             calculation.clearAllValues();
             notifyButtonPressed.setText("Drag Co: " + calculation.getDragCoefficient());
+            Log.e("Drag co", "" + calculation.getDragCoefficient());
         }
     }
 }

@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     int trialNum = 1;
     TextView time, speed, notifyButtonPressed;
     Button start, pause, stop;
-    Button startTimer, nextTrial;
+    Button beginTimer, nextTrial;
     long startTime, endTime, currentTime, timeElapsed;
     LocationService myService;
     LocationManager locationManager;
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
             {0, 27, 25, 20, 27.5, 27},
             {0, 22, 20, 18, 22.5, 0}
     };
+    AlertDialog alert;
 
       //      new double[8][6];
     private ArrayList<ArrayList<Double>> trials = new ArrayList<>();
@@ -169,26 +170,26 @@ public class MainActivity extends AppCompatActivity {
         stop = findViewById(R.id.stop);
 
         image = findViewById(R.id.image);
-        startTimer = findViewById(R.id.beginButton);
-        startTimer.setVisibility(View.GONE);
+        beginTimer = findViewById(R.id.beginButton);
+        beginTimer.setVisibility(View.GONE);
 
         nextTrial.setOnClickListener((v) -> {
             {
-                AlertDialog.Builder alertBuilder = new AlertDialog.Builder(MainActivity.this);
-                alertBuilder.setMessage("Proceed to next trial?").setCancelable(true)
+                AlertDialog.Builder nextTrialAlert = new AlertDialog.Builder(MainActivity.this);
+                nextTrialAlert.setMessage("Proceed to next trial?").setCancelable(true)
                         .setPositiveButton("Yes", (dialogInterface, i) ->
                         {
                             {
                                 //Log.i("Testing", trial1.get(0) + " trial 1 at 0");
                                // Log.i("Testing", trial1.get(1) + " trial 1 at 1");
                                 trialNum++;
-                                startTimer.performClick();
+                                beginTimer.performClick();
                             }
                         });
-                alertBuilder.setNegativeButton("No", (dialogInterface, i) ->
+                nextTrialAlert.setNegativeButton("No", (dialogInterface, i) ->
                         dialogInterface.cancel());
 
-                AlertDialog alert = alertBuilder.create();
+                AlertDialog alert = nextTrialAlert.create();
                 alert.show();
             }
         });
@@ -212,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
             locate.show();
 
             notifyButtonPressed.setVisibility(View.VISIBLE);
-            startTimer.setVisibility(View.VISIBLE);
+            beginTimer.setVisibility(View.VISIBLE);
             start.setVisibility(View.GONE);
             pause.setVisibility(View.VISIBLE);
             pause.setText(R.string.Pause);
@@ -284,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
                 (dialogInterface, i) ->
                         dialogInterface.cancel());
 
-        AlertDialog alert = alertDialogBuilder.create();
+        alert = alertDialogBuilder.create();
         alert.show();
     }
 
@@ -311,19 +312,19 @@ public class MainActivity extends AppCompatActivity {
             speed.setText(speedText);
 
             if (speedValue >= 0 && !hasClockStarted) {
-                startTimer.setVisibility(View.VISIBLE);
+                beginTimer.setVisibility(View.VISIBLE);
                 Log.i("Start timer button", "Start timer button has been displayed");
             } else {
-                startTimer.setVisibility(View.INVISIBLE);
+                beginTimer.setVisibility(View.INVISIBLE);
             }
         }
 
-        startTimer.setOnClickListener(view ->
+        beginTimer.setOnClickListener(view ->
         {
             notifyButtonPressed.setVisibility(View.VISIBLE);
-            //hasClockStarted = true;
+            hasClockStarted = true;
             startTime = System.currentTimeMillis();
-            startTimer.setVisibility(View.INVISIBLE);
+            beginTimer.setVisibility(View.INVISIBLE);
             Log.i("Start time seconds: ", startTime + " start time seconds");
         });
 
@@ -333,15 +334,19 @@ public class MainActivity extends AppCompatActivity {
         Log.i("Current time seconds: ", currentTime + " current time seconds");
         Log.i("Subtraction ", "Difference: " + timeElapsed);
 
-        if (((timeElapsed % INTERVAL) == 0) && (timeElapsed != 0) && hasClockStarted) {
+        if (((timeElapsed % INTERVAL) == 0) && (timeElapsed != 0) && hasClockStarted
+                && speedValue > 5) {
+            Log.i("trial num", trialNum + "");
             switch (trialNum) {
                 case 1:
                     trial1.add(speedValue);
-                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial1");
+                    Log.i("Adding speed to array", "Current speed of " + speedValue +
+                            " mph was added to the array: trial1");
                     break;
                 case 2:
                     trial2.add(speedValue);
-                    Log.i("Adding speed to array", "Current speed of " + speedValue + " mph was added to the array: trial2");
+                    Log.i("Adding speed to array", "Current speed of " + speedValue +
+                            " mph was added to the array: trial2");
                     break;
                 case 3:
                     trial3.add(speedValue);
